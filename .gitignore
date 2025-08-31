@@ -76,3 +76,4 @@ nunit-*.xml
 .vs/WebApi/v17/.suo
 .vs/WebApi/v17/DocumentLayout.backup.json
 WebApi/appsettings.Development.json
+/.vs/WebApi/FileContentIndex/1c0abd6f-356b-447b-a2c4-fcc4e0c28230.vsidx

@@ -14,53 +14,52 @@ namespace WebApi.Data
 
         // DbSets para tus entidades
         public DbSet<Product> Products => Set<Product>();
-        public DbSet<Empleado> Empleados { get; set; }
-        public DbSet<Cargo> Cargos { get; set; }
-        public DbSet<EmpleadoEstado> EmpleadosEstado { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<EmployeeRoles> EmployeeRoles { get; set; }
+        public DbSet<EmployeeStatuses> EmployeeStatuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configuración de Empleado
-            modelBuilder.Entity<Empleado>(entity =>
+            modelBuilder.Entity<Employee>(entity =>
             {
-                entity.ToTable("Empleado");
-                entity.HasKey(e => e.id_empleado);
-                entity.Property(e => e.nombres).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.apellidos).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.telefono).HasMaxLength(20);
+                entity.ToTable("Employee");
+                entity.HasKey(e => e.EmployeeId);
+                entity.Property(e => e.names).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.lastnames).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.phone).HasMaxLength(20);
                 entity.Property(e => e.user).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.password).IsRequired().HasMaxLength(255);
-                entity.Property(e => e.fecha_contratacion).IsRequired();
+                entity.Property(e => e.hiring_date).IsRequired();
+                entity.Property(e => e.email).HasMaxLength(100);
+                entity.Property(e => e.url_photo).HasMaxLength(255);
 
-                // Clave foránea hacia Cargo
-                entity.HasOne(e => e.Cargo)
-                      .WithMany(c => c.Empleados)
-                      .HasForeignKey(e => e.id_cargo)
+                entity.HasOne(e => e.EmployeeRole)
+                      .WithMany(c => c.Employees)
+                      .HasForeignKey(e => e.EmployeeRoleId)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Clave foránea hacia EmpleadoEstado
-                entity.HasOne(e => e.EmpleadoEstado)
-                      .WithMany(est => est.Empleados)
-                      .HasForeignKey(e => e.id_empleado_estado)
+                entity.HasOne(e => e.EmployeeStatus)
+                      .WithMany(est => est.Employees)
+                      .HasForeignKey(e => e.EmployeeStatusId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Configuración de Cargo
-            modelBuilder.Entity<Cargo>(entity =>
+            modelBuilder.Entity<EmployeeRoles> (entity =>
             {
-                entity.ToTable("Cargo");
-                entity.HasKey(c => c.id_cargo);
-                entity.Property(c => c.cargo).IsRequired().HasMaxLength(100);
+                entity.ToTable("EmployeeRoles");
+                entity.HasKey(c => c.EmployeeRoleId);
+                entity.Property(c => c.name).IsRequired().HasMaxLength(100);
+                entity.Property(c => c.status).HasDefaultValue(true);
             });
 
-            // Configuración de EmpleadoEstado
-            modelBuilder.Entity<EmpleadoEstado>(entity =>
+            modelBuilder.Entity<EmployeeStatuses>(entity =>
             {
-                entity.ToTable("EmpleadoEstado");
-                entity.HasKey(est => est.id_empleado_estado);
-                entity.Property(est => est.estado).IsRequired().HasMaxLength(50);
+                entity.ToTable("EmployeeStatuses");
+                entity.HasKey(est => est.EmployeeStatusId);
+                entity.Property(est => est.name).IsRequired().HasMaxLength(100);
+                entity.Property(est => est.status).HasDefaultValue(true);
             });
         }
     }

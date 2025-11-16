@@ -3,8 +3,22 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebApi.Data;
+using WebApi.GraphQL;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 
 // Add services to the container.
 
@@ -51,6 +65,14 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// --- SERVICIOS DE HOT CHOCOLATE ---
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<Query>()       // Registra 'Query.cs'
+    .AddProjections()            // Habilita [UseProjection]
+    .AddFiltering()              // Habilita [UseFiltering]
+    .AddSorting();               // Habilita [UseSorting]
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -62,9 +84,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors(MyAllowSpecificOrigins);
+
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+// --- MAPEAR EL ENDPOINT DE GRAPHQL ---
+app.MapGraphQL(); // Esto crea la URL /graphql
 
 app.Run();
 

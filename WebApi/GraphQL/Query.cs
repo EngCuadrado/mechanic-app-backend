@@ -11,7 +11,6 @@
     using HotChocolate.Data;
     using HotChocolate;
 
-    // Esta clase es el "mostrador" para el cliente.
     // Define QUÉ se puede pedir.
     public class Query
     {
@@ -24,13 +23,27 @@
         public IQueryable<Employee> GetEmployees(
             [Service] AppDbContext context) // Inyecta tu DbContext
         {
-            // NO HAGAS .ToList()
-            // Solo devuelve la consulta. Hot Chocolate y EF Core
-            // se encargan de optimizar el SQL.
             return context.Employees;
         }
 
-        // Hacemos lo mismo para Productos
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<EmployeeRoles> GetEmployeeRoles(
+        [Service] AppDbContext context)
+        {
+            return context.EmployeeRoles;
+        }
+
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<EmployeeStatuses> GetEmployeeStatus(
+            [Service] AppDbContext context)
+        {
+            return context.EmployeeStatuses;
+        }
+
         [UseProjection]
         [UseFiltering]
         [UseSorting]

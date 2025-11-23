@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebApi.Data;
 using WebApi.GraphQL;
+using WebApi.GraphQL.Mutations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +70,8 @@ builder.Services.AddAuthorization();
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<Query>()       // Registra 'Query.cs'
+    .AddMutationType<Mutation>()
+    .AddTypeExtension<EmployeeMutations>()
     .AddProjections()            // Habilita [UseProjection]
     .AddFiltering()              // Habilita [UseFiltering]
     .AddSorting();               // Habilita [UseSorting]

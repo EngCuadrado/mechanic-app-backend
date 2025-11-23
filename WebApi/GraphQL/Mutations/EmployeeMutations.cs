@@ -163,7 +163,7 @@ namespace WebApi.GraphQL.Mutations
         /// Crea un nuevo empleado con validaciones completas.
         /// </summary>
         public async Task<MutationResult> AddEmployeeAsync(
-            EmployeeInput input,
+            AddEmployeeInput input,
             [Service] AppDbContext context)
         {
             // 1. Validaciones de campos obligatorios
@@ -230,8 +230,11 @@ namespace WebApi.GraphQL.Mutations
         /// <summary>
         /// Actualiza un empleado existente.
         /// </summary>
+        /// <summary>
+        /// Actualiza un empleado existente.
+        /// </summary>
         public async Task<MutationResult> UpdateEmployeeAsync(
-            EmployeeInput input,
+            UpdateEmployeeInput input,
             [Service] AppDbContext context)
         {
             var emp = await context.Employees.FindAsync(input.EmployeeId);
@@ -299,27 +302,27 @@ namespace WebApi.GraphQL.Mutations
             // 5. Actualizar Password (si se envía)
             if (!string.IsNullOrWhiteSpace(input.Password))
             {
-                emp.password = input.Password; // TODO: Hashear
+                emp.password = input.Password; // ¡Recuerda Hashear!
             }
 
             // 6. Fecha contratación
-            if (input.Hiring_date != null)
-                emp.hiring_date = input.Hiring_date;
+            if (input.Hiring_date.HasValue)
+                emp.hiring_date = input.Hiring_date.Value;
 
             // 7. Actualizar Rol (validando que exista)
-            if (input.EmployeeRoleId != null)
+            if (input.EmployeeRoleId.HasValue)
             {
-                bool roleOk = await context.EmployeeRoles.AnyAsync(r => r.EmployeeRoleId == input.EmployeeRoleId);
+                bool roleOk = await context.EmployeeRoles.AnyAsync(r => r.EmployeeRoleId == input.EmployeeRoleId.Value);
                 if (!roleOk) return new MutationResult(false, "EmployeeRoleId no válido");
-                emp.EmployeeRoleId = input.EmployeeRoleId;
+                emp.EmployeeRoleId = input.EmployeeRoleId.Value;
             }
 
             // 8. Actualizar Estado (validando que exista)
-            if (input.EmployeeStatusId != null)
+            if (input.EmployeeStatusId.HasValue)
             {
-                bool statusOk = await context.EmployeeStatuses.AnyAsync(s => s.EmployeeStatusId == input.EmployeeStatusId);
+                bool statusOk = await context.EmployeeStatuses.AnyAsync(s => s.EmployeeStatusId == input.EmployeeStatusId.Value);
                 if (!statusOk) return new MutationResult(false, "EmployeeStatusId no válido");
-                emp.EmployeeStatusId = input.EmployeeStatusId;
+                emp.EmployeeStatusId = input.EmployeeStatusId.Value;
             }
 
             try

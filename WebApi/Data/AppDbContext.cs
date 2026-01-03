@@ -18,6 +18,8 @@ namespace WebApi.Data
         public DbSet<EmployeeRoles> EmployeeRoles { get; set; }
         public DbSet<EmployeeStatuses> EmployeeStatuses { get; set; }
 
+        public DbSet<Brands> Brands { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -60,6 +62,14 @@ namespace WebApi.Data
                 entity.HasKey(est => est.EmployeeStatusId);
                 entity.Property(est => est.name).IsRequired().HasMaxLength(100);
                 entity.Property(est => est.status).HasDefaultValue(true);
+            });
+
+            modelBuilder.Entity<Brands>(entity =>
+            {
+                entity.ToTable("brands");
+                entity.HasKey(b => b.id_brand);
+                entity.Property(b => b.name).IsRequired().HasMaxLength(100);
+                entity.Property(b => b.name).IsRequired(); 
             });
         }
     }

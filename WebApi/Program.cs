@@ -72,6 +72,7 @@ builder.Services
     .AddQueryType<Query>()       // Registra 'Query.cs'
     .AddMutationType<Mutation>()
     .AddTypeExtension<EmployeeMutations>()
+    .AddTypeExtension<BrandMutations>()  
     .AddProjections()            // Habilita [UseProjection]
     .AddFiltering()              // Habilita [UseFiltering]
     .AddSorting();               // Habilita [UseSorting]

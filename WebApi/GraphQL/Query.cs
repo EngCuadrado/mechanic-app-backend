@@ -44,6 +44,15 @@
             return context.EmployeeStatuses;
         }
 
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<Brands> GetBrands([Service] AppDbContext context)
+        {
+            return context.Brands;
+        }
+
         [UseProjection]
         [UseFiltering]
         [UseSorting]

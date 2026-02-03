@@ -70,6 +70,9 @@ namespace WebApi.Data
                 entity.HasKey(b => b.id_brand);
                 entity.Property(b => b.name).IsRequired().HasMaxLength(100);
                 entity.Property(b => b.name).IsRequired(); 
+                entity.Property(b => b.logo_url).HasMaxLength(250);
+                entity.Property(b => b.contact_phone).HasMaxLength(15);
+                entity.Property(b => b.contact_email).HasMaxLength(100);
             });
         }
     }

@@ -9,13 +9,18 @@ namespace WebApi.GraphQL.Mutations
     public class BrandMutations
     {
         public async Task<Brands> AddBrandAsync(
-            [Service] AppDbContext context,
-            string name)
+            [Service] AppDbContext context, 
+            string name, string phone, string email)
         {
+            var now = DateTime.UtcNow;
             var newBrand = new Brands
             {
                 name = name,
-                is_active = true
+                contact_phone = phone,
+                contact_email = email,
+                is_active = true,
+                created_at = now,
+                updated_at = now
             };
 
             context.Brands.Add(newBrand);

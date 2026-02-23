@@ -52,14 +52,107 @@
         {
             return context.Brands;
         }
+        
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<Category> GetCategories([Service] AppDbContext context)
+        {
+            return context.Categories;
+        }
+        
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<ActiveIngredient> GetActiveIngredients([Service] AppDbContext context)
+        {
+            return context.ActiveIngredients;
+        }
+        
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<AdministrationRoute> GetAdministrationRoutes([Service] AppDbContext context)
+        {
+            return context.AdministrationRoutes;
+        }
+        
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<UnitOfMeasure> GetUnitOfMeasures([Service] AppDbContext context)
+        {
+            return context.UnitOfMeasures;
+        }
+        
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<DoseUnit> GetDoseUnits([Service] AppDbContext context)
+        {
+            return context.DoseUnits;
+        }
+        
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<SupplierType> GetSupplierTypes([Service] AppDbContext context)
+        {
+            return context.SupplierTypes;
+        }
+        
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<Supplier> GetSuppliers([Service] AppDbContext context)
+        {
+            return context.Suppliers;
+        }
 
-        [UseProjection]
-        [UseFiltering]
-        [UseSorting]
-        public IQueryable<Product> GetProducts(
-            [Service] AppDbContext context)
+        
+        // -------------------------------------------------------------------
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<Product> GetProducts([Service] AppDbContext context)
         {
             return context.Products;
         }
+        
+        [UsePaging]
+        [UseProjection] 
+        [UseFiltering]
+        [UseSorting]       
+        public IQueryable<Medicine> GetMedicines([Service] AppDbContext context)
+        {
+            return context.Medicines;
+        }
+        
+        [UsePaging]
+        [UseProjection] // Lee las relaciones.
+        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
+        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
+        public IQueryable<MedicineActiveIngredient> GetMedicineActiveIngredients([Service] AppDbContext context)
+        {
+            return context.MedicineActiveIngredients;
+        }
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Batch> GetBatches([Service] AppDbContext context)
+        {
+            return context.Batches; 
+        }
+
     }
 }

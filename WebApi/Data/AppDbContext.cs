@@ -12,12 +12,38 @@ namespace WebApi.Data
         {
         }
 
-        // DbSets para tus entidades
-        public DbSet<Product> Products => Set<Product>();
         public DbSet<Employee> Employees { get; set; }
         public DbSet<EmployeeRoles> EmployeeRoles { get; set; }
         public DbSet<EmployeeStatuses> EmployeeStatuses { get; set; }
 
+        public DbSet<Brands> Brands { get; set; }
+        
+        public DbSet<Category> Categories { get; set; }
+        
+        public DbSet<AdministrationRoute> AdministrationRoutes { get; set; }
+        
+        public DbSet<Presentation> Presentations { get; set; }
+        
+        public DbSet<UnitOfMeasure> UnitOfMeasures { get; set; }
+        
+        public DbSet<DoseUnit> DoseUnits { get; set; }
+        
+        public DbSet<Manufacturer> Manufacturers { get; set; }
+        
+        public DbSet<ActiveIngredient> ActiveIngredients { get; set; }
+        
+        public DbSet<SupplierType> SupplierTypes { get; set; }
+
+        public DbSet<Supplier> Suppliers { get; set; }
+        
+        public DbSet<Product> Products => Set<Product>();
+        
+        public DbSet<Medicine> Medicines => Set<Medicine>();
+        
+        public DbSet<MedicineActiveIngredient> MedicineActiveIngredients => Set<MedicineActiveIngredient>();
+        
+        public DbSet<Batch> Batches => Set<Batch>();
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -45,7 +71,7 @@ namespace WebApi.Data
                       .HasForeignKey(e => e.EmployeeStatusId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
-
+            
             modelBuilder.Entity<EmployeeRoles> (entity =>
             {
                 entity.ToTable("EmployeeRoles");
@@ -61,6 +87,207 @@ namespace WebApi.Data
                 entity.Property(est => est.name).IsRequired().HasMaxLength(100);
                 entity.Property(est => est.status).HasDefaultValue(true);
             });
+
+            modelBuilder.Entity<Brands>(entity =>
+            {
+                entity.ToTable("brands");
+                entity.HasKey(b => b.id_brand);
+                entity.Property(b => b.name).IsRequired().HasMaxLength(100);
+                entity.Property(b => b.name).IsRequired(); 
+                entity.Property(b => b.logo_url).HasMaxLength(250);
+                entity.Property(b => b.contact_phone).HasMaxLength(15);
+                entity.Property(b => b.contact_email).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.ToTable("Category");
+                entity.HasKey(c => c.category_id);
+                entity.Property(c => c.name).HasMaxLength(100);
+                entity.Property(c => c.description).HasMaxLength(10000);
+                entity.Property(c => c.is_active).HasDefaultValue(true);
+            });
+
+            modelBuilder.Entity<AdministrationRoute>(entity =>
+            {
+                entity.ToTable("AdministrationRoute");
+                entity.HasKey(a => a.administration_route_id); 
+                entity.Property(a => a.name).HasMaxLength(100);
+            });
+            
+            modelBuilder.Entity<ActiveIngredient>(entity =>
+            {
+                entity.ToTable("ActiveIngredient");
+                entity.HasKey(a => a.active_ingredient_id); 
+                entity.Property(a => a.name).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<Presentation>(entity =>
+            {
+                entity.ToTable("Presentation");
+                entity.HasKey(a => a.presentation_id);
+                entity.Property(a => a.name).HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<UnitOfMeasure>(entity =>
+            {   
+                entity.ToTable("UnitOfMeasure");
+                entity.HasKey(u => u.unit_of_measure_id);
+            });
+
+            modelBuilder.Entity<Manufacturer>(entity =>
+            {
+                entity.ToTable("Manufacturer");
+                entity.HasKey(u => u.manufacturer_id);
+            });
+
+            modelBuilder.Entity<DoseUnit>(entity =>
+            {
+                entity.ToTable("DoseUnit");
+                entity.HasKey(d => d.dose_unit_id); 
+            });
+
+            modelBuilder.Entity<SupplierType>(entity =>
+            {
+                entity.ToTable("SupplierType");
+                entity.HasKey(st => st.supplier_type_id); 
+            });
+            
+            modelBuilder.Entity<Supplier>(entity =>
+            {
+                entity.ToTable("Supplier");
+                entity.HasKey(s => s.supplier_id);
+    
+                entity.HasOne(s => s.type)
+                    .WithMany(st => st.Suppliers)
+                    .HasForeignKey(s => s.supplier_type_id) // Changed to the correct FK
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            // --------------------------------------------------------
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.ToTable("Product");
+                entity.HasKey(e => e.product_id);
+
+                // Precisión para decimales
+                entity.Property(e => e.price_full_presentation).HasPrecision(10, 2);
+                entity.Property(e => e.price_per_unit).HasPrecision(10, 2);
+
+                // Valores por defecto
+                entity.Property(e => e.units_per_presentation).HasDefaultValue(1);
+                entity.Property(e => e.stock_units).HasDefaultValue(0);
+                entity.Property(e => e.min_stock_units).HasDefaultValue(10);
+                entity.Property(e => e.product_status_id).HasDefaultValue(1);
+                entity.Property(e => e.currency).HasDefaultValue("NIO").HasMaxLength(20);
+                entity.Property(e => e.created_at).HasDefaultValueSql("GETDATE()");
+
+                // --- RELACIONES CORREGIDAS ---
+
+                // Relación con Supplier
+                // Nota: Asegúrate que en la clase Supplier la colección se llame 'Products' y no 'Suppliers'
+                entity.HasOne(d => d.supplier)
+                    .WithMany() 
+                    .HasForeignKey(d => d.supplier_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Relación con Presentation
+                entity.HasOne(d => d.presentation) // Minúscula como en tu clase
+                    .WithMany() // Si Presentation no tiene una lista de productos, déjalo vacío
+                    .HasForeignKey(d => d.presentation_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Relación con UnitOfMeasure
+                entity.HasOne(d => d.unit_of_measure) // Minúscula como en tu clase
+                    .WithMany()
+                    .HasForeignKey(d => d.unit_of_measure_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+            });
+            
+            modelBuilder.Entity<Medicine>(entity =>
+            {
+                entity.ToTable("Medicine");
+                entity.HasKey(m => m.medicine_id);
+
+                entity.Property(m => m.name).IsRequired().HasMaxLength(150);
+                entity.Property(m => m.requires_prescription).HasDefaultValue(false);
+
+                // Relación 1:1 o 1:N con Product (Depende de si un producto solo puede ser una medicina)
+                // Generalmente es 1:1 en farmacia (Un item de inventario = un medicamento específico)
+                entity.HasOne(m => m.product)
+                    .WithOne() // Si Product no tiene una propiedad virtual Medicine
+                    .HasForeignKey<Medicine>(m => m.product_id)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(m => m.brand)
+                    .WithMany()
+                    .HasForeignKey(m => m.id_brand)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(m => m.manufacturer)
+                    .WithMany()
+                    .HasForeignKey(m => m.manufacturer_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(m => m.category)
+                    .WithMany()
+                    .HasForeignKey(m => m.category_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(m => m.administration_route)
+                    .WithMany()
+                    .HasForeignKey(m => m.administration_route_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+            });
+            
+            modelBuilder.Entity<MedicineActiveIngredient>(entity =>
+            {
+                entity.ToTable("MedicineActiveIngredient");
+
+                // Configuración de la Clave Primaria Compuesta
+                entity.HasKey(ma => new { ma.medicine_id, ma.active_ingredient_id });
+
+                entity.Property(ma => ma.dose_value)
+                    .HasPrecision(10, 2)
+                    .IsRequired();
+
+                // Relaciones
+                entity.HasOne(ma => ma.medicine)
+                    .WithMany(m => m.medicine_active_ingredients)
+                    .HasForeignKey(ma => ma.medicine_id)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ma => ma.active_ingredient)
+                    .WithMany()
+                    .HasForeignKey(ma => ma.active_ingredient_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(ma => ma.dose_unit)
+                    .WithMany()
+                    .HasForeignKey(ma => ma.dose_unit_id)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            modelBuilder.Entity<Batch>(entity =>
+            {
+                entity.ToTable("Batch");
+                entity.HasKey(b => b.batch_id);
+
+                entity.Property(b => b.batch_code).IsRequired().HasMaxLength(50);
+                entity.Property(b => b.expiration_date).IsRequired();
+                entity.Property(b => b.is_active).HasDefaultValue(true);
+                entity.Property(b => b.created_at).HasDefaultValueSql("GETDATE()");
+
+                // Relación con Product
+                // Un producto puede tener muchos lotes (ej: Aspirinas de diferentes vencimientos)
+                entity.HasOne(b => b.product)
+                    .WithMany(p => p.batches) // Recuerda agregar public virtual ICollection<Batch> batches a la clase Product
+                    .HasForeignKey(b => b.product_id)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
+        
     }
 }

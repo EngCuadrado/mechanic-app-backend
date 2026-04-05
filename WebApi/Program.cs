@@ -72,9 +72,20 @@ builder.Services
     .AddQueryType<Query>()       // Registra 'Query.cs'
     .AddMutationType<Mutation>()
     .AddTypeExtension<EmployeeMutations>()
+    .AddTypeExtension<BrandMutations>()  
+    .AddTypeExtension<ActiveIngredientMutations>()
+    .AddTypeExtension<AdministrationRouteMutations>()
+    .AddTypeExtension<CategoryMutations>()
+    .AddTypeExtension<ManufacturerMutations>()
+    .AddTypeExtension<PresentationMutations>()
+    .AddTypeExtension<UnitOfMeasureMutations>() 
+    .AddTypeExtension<MedicineMutations>()
+    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AddProjections()            // Habilita [UseProjection]
     .AddFiltering()              // Habilita [UseFiltering]
-    .AddSorting();               // Habilita [UseSorting]
+    .AddSorting()               // Habilita [UseSorting]
+    .AddCostAnalyzer() 
+    .ModifyCostOptions(o => o.MaxFieldCost = 5000);
 
 var app = builder.Build();
 

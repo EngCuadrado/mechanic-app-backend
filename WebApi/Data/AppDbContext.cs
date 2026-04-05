@@ -164,7 +164,6 @@ namespace WebApi.Data
                     .OnDelete(DeleteBehavior.Restrict);
             });
             
-            
             // --------------------------------------------------------
             modelBuilder.Entity<Product>(entity =>
             {
@@ -179,7 +178,7 @@ namespace WebApi.Data
                 entity.Property(e => e.units_per_presentation).HasDefaultValue(1);
                 entity.Property(e => e.stock_units).HasDefaultValue(0);
                 entity.Property(e => e.min_stock_units).HasDefaultValue(10);
-                entity.Property(e => e.status_id).HasDefaultValue(1);
+                entity.Property(e => e.product_status_id).HasDefaultValue(1);
                 entity.Property(e => e.currency).HasDefaultValue("NIO").HasMaxLength(20);
                 entity.Property(e => e.created_at).HasDefaultValueSql("GETDATE()");
 

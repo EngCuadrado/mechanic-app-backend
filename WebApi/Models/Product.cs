@@ -26,7 +26,7 @@ public class Product
     public bool is_fractionable { get; set; } = false;
 
     // Metadatos
-    public int status_id { get; set; } = 1;
+    public int product_status_id { get; set; } = 1;
 
     public string currency { get; set; } = "NIO";
 

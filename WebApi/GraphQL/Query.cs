@@ -154,5 +154,24 @@
             return context.Batches; 
         }
 
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Presentation> GetPresentations([Service] AppDbContext context)
+        {
+            return context.Presentations;
+        }
+
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Manufacturer> GetManufacturers([Service] AppDbContext context)
+        {
+            return context.Manufacturers;
+        }
+
     }
 }

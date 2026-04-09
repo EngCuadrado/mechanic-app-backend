@@ -80,6 +80,7 @@ builder.Services
     .AddTypeExtension<PresentationMutations>()
     .AddTypeExtension<UnitOfMeasureMutations>() 
     .AddTypeExtension<MedicineMutations>()
+    .AddTypeExtension<BatchMutations>()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AddProjections()            // Habilita [UseProjection]
     .AddFiltering()              // Habilita [UseFiltering]

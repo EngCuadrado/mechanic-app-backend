@@ -276,6 +276,7 @@ namespace WebApi.Data
                 entity.HasKey(b => b.batch_id);
 
                 entity.Property(b => b.batch_code).IsRequired().HasMaxLength(50);
+                entity.HasIndex(b => new { b.product_id, b.batch_code }).IsUnique();
                 entity.Property(b => b.expiration_date).IsRequired();
                 entity.Property(b => b.is_active).HasDefaultValue(true);
                 entity.Property(b => b.created_at).HasDefaultValueSql("GETDATE()");

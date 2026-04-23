@@ -173,5 +173,27 @@
             return context.Manufacturers;
         }
 
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<PaymentMethod> GetActivePaymentMethods([Service] AppDbContext context)
+        {
+            return context.PaymentMethods.Where(p => p.IsActive);
+        }
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Promotion> GetActivePromotions([Service] AppDbContext context)
+        {
+            var now = DateTime.Now;
+            return context.Promotions.Where(p => 
+                p.IsActive && 
+                (p.StartDate == null || p.StartDate <= now) && 
+                (p.EndDate == null || p.EndDate >= now));
+        }
+
     }
 }

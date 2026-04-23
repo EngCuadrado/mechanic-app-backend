@@ -81,6 +81,8 @@ builder.Services
     .AddTypeExtension<UnitOfMeasureMutations>() 
     .AddTypeExtension<MedicineMutations>()
     .AddTypeExtension<BatchMutations>()
+    .AddTypeExtension<PromotionMutations>()
+    .AddTypeExtension<PaymentMethodMutations>()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AddProjections()            // Habilita [UseProjection]
     .AddFiltering()              // Habilita [UseFiltering]

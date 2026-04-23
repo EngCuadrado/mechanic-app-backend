@@ -83,6 +83,7 @@ builder.Services
     .AddTypeExtension<BatchMutations>()
     .AddTypeExtension<PromotionMutations>()
     .AddTypeExtension<PaymentMethodMutations>()
+    .AddTypeExtension<SaleMutations>()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AddProjections()            // Habilita [UseProjection]
     .AddFiltering()              // Habilita [UseFiltering]

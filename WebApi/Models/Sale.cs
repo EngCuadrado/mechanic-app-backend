@@ -19,6 +19,16 @@ public class Sale
     public int EmployeeId { get; set; }
 
     [Required]
+    [MaxLength(20)]
+    [Column("receipt_type")]
+    public string ReceiptType { get; set; } // 'FACTURA', 'TICKET'
+
+    [Required]
+    [MaxLength(50)]
+    [Column("receipt_number")]
+    public string ReceiptNumber { get; set; }
+
+    [Required]
     [Column("sale_date")]
     public DateTime SaleDate { get; set; } = DateTime.Now;
 

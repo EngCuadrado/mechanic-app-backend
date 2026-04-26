@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using WebApi.Models.Empleados;
 
 namespace WebApi.Models;
 
@@ -14,12 +15,15 @@ public class InventoryTransaction
     [Column("product_id")]
     public int ProductId { get; set; }
 
-    [Required]
     [Column("batch_id")]
-    public int BatchId { get; set; }
+    public int? BatchId { get; set; }
 
     [Required]
-    [MaxLength(20)]
+    [Column("employee_id")]
+    public int EmployeeId { get; set; }
+
+    [Required]
+    [MaxLength(50)]
     [Column("transaction_type")]
     public string TransactionType { get; set; } // 'SALE', 'PURCHASE', 'ADJUSTMENT', etc.
 
@@ -31,6 +35,21 @@ public class InventoryTransaction
     [Column("stock_after_transaction")]
     public int StockAfterTransaction { get; set; }
 
+    [Required]
+    [Column("unit_cost", TypeName = "decimal(18,4)")]
+    public decimal UnitCost { get; set; }
+
+    [MaxLength(50)]
+    [Column("reference_document_type")]
+    public string ReferenceDocumentType { get; set; }
+
+    [Column("reference_document_id")]
+    public int? ReferenceDocumentId { get; set; }
+
+    [MaxLength(255)]
+    [Column("notes")]
+    public string Notes { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
@@ -41,4 +60,7 @@ public class InventoryTransaction
 
     [ForeignKey(nameof(BatchId))]
     public virtual Batch Batch { get; set; }
+
+    [ForeignKey(nameof(EmployeeId))]
+    public virtual Employee Employee { get; set; }
 }

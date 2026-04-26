@@ -121,11 +121,14 @@ namespace WebApi.GraphQL.Mutations
                     CustomerId = input.CustomerId,
                     ReceiptType = input.ReceiptType,
                     ReceiptNumber = input.ReceiptNumber,
+                    PrescriptionNumber = input.PrescriptionNumber,
+                    DoctorName = input.DoctorName,
+                    Currency = input.Currency ?? "NIO",
                     SaleDate = DateTime.Now,
-                    Subtotal = totalGrossSubtotal,
+                    GrossSubtotal = totalGrossSubtotal,
                     TotalDiscount = totalDiscount,
                     TotalTax = totalTax,
-                    TotalAmount = netTotal,
+                    NetTotal = netTotal,
                     Status = "COMPLETED"
                 };
 
@@ -151,9 +154,13 @@ namespace WebApi.GraphQL.Mutations
                     {
                         ProductId = detail.ProductId,
                         BatchId = detail.BatchId,
+                        EmployeeId = input.EmployeeId,
                         TransactionType = "SALE",
                         QuantityMoved = -detail.Quantity,
                         StockAfterTransaction = updateInfo.batch.current_quantity_units,
+                        UnitCost = product.cost_price,
+                        ReferenceDocumentType = "SALE_INVOICE",
+                        ReferenceDocumentId = sale.SaleId,
                         CreatedAt = DateTime.Now
                     });
                 }
@@ -165,7 +172,8 @@ namespace WebApi.GraphQL.Mutations
                     {
                         SaleId = sale.SaleId,
                         PaymentMethodId = payInput.PaymentMethodId,
-                        Amount = payInput.Amount
+                        Amount = payInput.Amount,
+                        TransactionReference = payInput.TransactionReference
                     });
                 }
 

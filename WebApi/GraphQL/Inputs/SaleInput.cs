@@ -7,6 +7,9 @@ namespace WebApi.GraphQL.Inputs
         int? CustomerId,
         string ReceiptType,
         string ReceiptNumber,
+        string? PrescriptionNumber,
+        string? DoctorName,
+        string? Currency,
         List<SaleDetailInput> Details,
         List<SalePaymentInput> Payments
     );
@@ -21,6 +24,7 @@ namespace WebApi.GraphQL.Inputs
 
     public record SalePaymentInput(
         int PaymentMethodId,
-        decimal Amount
+        decimal Amount,
+        string? TransactionReference
     );
 }

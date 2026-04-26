@@ -340,11 +340,10 @@ namespace WebApi.Data
             {
                 entity.ToTable("Sale");
                 entity.HasKey(s => s.SaleId);
-                entity.Property(s => s.Subtotal).HasPrecision(18, 2);
+                entity.Property(s => s.GrossSubtotal).HasPrecision(18, 2);
                 entity.Property(s => s.TotalDiscount).HasPrecision(18, 2);
                 entity.Property(s => s.TotalTax).HasPrecision(18, 2);
-                entity.Property(s => s.TotalAmount).HasPrecision(18, 2);
-                entity.Property(s => s.CreatedAt).HasDefaultValueSql("GETDATE()");
+                entity.Property(s => s.NetTotal).HasPrecision(18, 2);
                 entity.Property(s => s.SaleDate).HasDefaultValueSql("GETDATE()");
 
                 entity.HasOne(s => s.Customer)
@@ -404,6 +403,29 @@ namespace WebApi.Data
                 entity.HasOne(sp => sp.PaymentMethod)
                     .WithMany()
                     .HasForeignKey(sp => sp.PaymentMethodId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<InventoryTransaction>(entity =>
+            {
+                entity.ToTable("InventoryTransaction");
+                entity.HasKey(it => it.TransactionId);
+                entity.Property(it => it.UnitCost).HasPrecision(18, 4);
+                entity.Property(it => it.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+                entity.HasOne(it => it.Product)
+                    .WithMany()
+                    .HasForeignKey(it => it.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(it => it.Batch)
+                    .WithMany()
+                    .HasForeignKey(it => it.BatchId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(it => it.Employee)
+                    .WithMany()
+                    .HasForeignKey(it => it.EmployeeId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }

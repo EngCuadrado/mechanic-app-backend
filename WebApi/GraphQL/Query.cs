@@ -189,10 +189,7 @@
         public IQueryable<Promotion> GetActivePromotions([Service] AppDbContext context)
         {
             var now = DateTime.Now;
-            return context.Promotions.Where(p => 
-                p.IsActive && 
-                (p.StartDate == null || p.StartDate <= now) && 
-                (p.EndDate == null || p.EndDate >= now));
+            return context.Promotions.Where(p => p.IsActive);
         }
 
     }

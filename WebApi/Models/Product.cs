@@ -5,6 +5,8 @@ public class Product
 
     public int product_id { get; set; }
 
+    public string barcode { get; set; }
+
     public int supplier_id { get; set; }
 
     public int presentation_id { get; set; }

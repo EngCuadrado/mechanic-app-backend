@@ -179,6 +179,8 @@ namespace WebApi.Data
                 entity.ToTable("Product");
                 entity.HasKey(e => e.product_id);
 
+                entity.Property(e => e.barcode).HasMaxLength(50);
+
                 // Precisión para decimales
                 entity.Property(e => e.price_full_presentation).HasPrecision(10, 2);
                 entity.Property(e => e.price_per_unit).HasPrecision(10, 2);

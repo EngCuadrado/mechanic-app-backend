@@ -43,7 +43,16 @@ namespace WebApi.Data
         public DbSet<MedicineActiveIngredient> MedicineActiveIngredients => Set<MedicineActiveIngredient>();
         
         public DbSet<Batch> Batches => Set<Batch>();
-        
+
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<PaymentMethod> PaymentMethods { get; set; }
+        public DbSet<Promotion> Promotions { get; set; }
+        public DbSet<PromotionProduct> PromotionProducts { get; set; }
+        public DbSet<Sale> Sales { get; set; }
+        public DbSet<SaleDetail> SaleDetails { get; set; }
+        public DbSet<SalePayment> SalePayments { get; set; }
+        public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -71,7 +80,7 @@ namespace WebApi.Data
                       .HasForeignKey(e => e.EmployeeStatusId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
-            
+
             modelBuilder.Entity<EmployeeRoles> (entity =>
             {
                 entity.ToTable("EmployeeRoles");
@@ -114,7 +123,7 @@ namespace WebApi.Data
                 entity.HasKey(a => a.administration_route_id); 
                 entity.Property(a => a.name).HasMaxLength(100);
             });
-            
+
             modelBuilder.Entity<ActiveIngredient>(entity =>
             {
                 entity.ToTable("ActiveIngredient");
@@ -152,23 +161,25 @@ namespace WebApi.Data
                 entity.ToTable("SupplierType");
                 entity.HasKey(st => st.supplier_type_id); 
             });
-            
+
             modelBuilder.Entity<Supplier>(entity =>
             {
                 entity.ToTable("Supplier");
                 entity.HasKey(s => s.supplier_id);
-    
+
                 entity.HasOne(s => s.type)
                     .WithMany(st => st.Suppliers)
                     .HasForeignKey(s => s.supplier_type_id) // Changed to the correct FK
                     .OnDelete(DeleteBehavior.Restrict);
             });
-            
+
             // --------------------------------------------------------
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.ToTable("Product");
                 entity.HasKey(e => e.product_id);
+
+                entity.Property(e => e.barcode).HasMaxLength(50);
 
                 // Precisión para decimales
                 entity.Property(e => e.price_full_presentation).HasPrecision(10, 2);
@@ -202,9 +213,9 @@ namespace WebApi.Data
                     .WithMany()
                     .HasForeignKey(d => d.unit_of_measure_id)
                     .OnDelete(DeleteBehavior.Restrict);
-                
+
             });
-            
+
             modelBuilder.Entity<Medicine>(entity =>
             {
                 entity.ToTable("Medicine");
@@ -239,9 +250,9 @@ namespace WebApi.Data
                     .WithMany()
                     .HasForeignKey(m => m.administration_route_id)
                     .OnDelete(DeleteBehavior.Restrict);
-                
+
             });
-            
+
             modelBuilder.Entity<MedicineActiveIngredient>(entity =>
             {
                 entity.ToTable("MedicineActiveIngredient");
@@ -269,7 +280,7 @@ namespace WebApi.Data
                     .HasForeignKey(ma => ma.dose_unit_id)
                     .OnDelete(DeleteBehavior.Restrict);
             });
-            
+
             modelBuilder.Entity<Batch>(entity =>
             {
                 entity.ToTable("Batch");
@@ -288,7 +299,135 @@ namespace WebApi.Data
                     .HasForeignKey(b => b.product_id)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+            modelBuilder.Entity<Customer>(entity =>
+            {
+                entity.ToTable("Customer");
+                entity.HasKey(c => c.CustomerId);
+                entity.Property(c => c.CreatedAt).HasDefaultValueSql("GETDATE()");
+            });
+
+            modelBuilder.Entity<PaymentMethod>(entity =>
+            {
+                entity.ToTable("PaymentMethod");
+                entity.HasKey(p => p.PaymentMethodId);
+            });
+
+            modelBuilder.Entity<Promotion>(entity =>
+            {
+                entity.ToTable("Promotion");
+                entity.HasKey(p => p.PromotionId);
+                entity.Property(p => p.DiscountValue).HasPrecision(18, 4);
+            });
+
+            modelBuilder.Entity<PromotionProduct>(entity =>
+            {
+                entity.ToTable("PromotionProduct");
+                entity.HasKey(pp => new { pp.PromotionId, pp.ProductId });
+
+                entity.HasOne(pp => pp.Promotion)
+                    .WithMany(p => p.PromotionProducts)
+                    .HasForeignKey(pp => pp.PromotionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(pp => pp.Product)
+                    .WithMany()
+                    .HasForeignKey(pp => pp.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Sale>(entity =>
+            {
+                entity.ToTable("Sale");
+                entity.HasKey(s => s.SaleId);
+                entity.Property(s => s.GrossSubtotal).HasPrecision(18, 2);
+                entity.Property(s => s.TotalDiscount).HasPrecision(18, 2);
+                entity.Property(s => s.TotalTax).HasPrecision(18, 2);
+                entity.Property(s => s.NetTotal).HasPrecision(18, 2);
+                entity.Property(s => s.SaleDate).HasDefaultValueSql("GETDATE()");
+
+                entity.HasOne(s => s.Customer)
+                    .WithMany(c => c.Sales)
+                    .HasForeignKey(s => s.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(s => s.Employee)
+                    .WithMany()
+                    .HasForeignKey(s => s.EmployeeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<SaleDetail>(entity =>
+            {
+                entity.ToTable("SaleDetail");
+                entity.HasKey(sd => sd.SaleDetailId);
+                entity.Property(sd => sd.AppliedCostPrice).HasPrecision(18, 4);
+                entity.Property(sd => sd.AppliedUnitPrice).HasPrecision(18, 4);
+                entity.Property(sd => sd.AppliedTaxRate).HasPrecision(5, 4);
+                entity.Property(sd => sd.CalculatedDiscount).HasPrecision(18, 2);
+                entity.Property(sd => sd.CalculatedTax).HasPrecision(18, 2);
+                entity.Property(sd => sd.LineTotal).HasPrecision(18, 2);
+
+                entity.HasOne(sd => sd.Sale)
+                    .WithMany(s => s.SaleDetails)
+                    .HasForeignKey(sd => sd.SaleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(sd => sd.Product)
+                    .WithMany()
+                    .HasForeignKey(sd => sd.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(sd => sd.Batch)
+                    .WithMany()
+                    .HasForeignKey(sd => sd.BatchId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(sd => sd.Promotion)
+                    .WithMany()
+                    .HasForeignKey(sd => sd.PromotionId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<SalePayment>(entity =>
+            {
+                entity.ToTable("SalePayment");
+                entity.HasKey(sp => sp.SalePaymentId);
+                entity.Property(sp => sp.Amount).HasPrecision(18, 2);
+
+                entity.HasOne(sp => sp.Sale)
+                    .WithMany(s => s.SalePayments)
+                    .HasForeignKey(sp => sp.SaleId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(sp => sp.PaymentMethod)
+                    .WithMany()
+                    .HasForeignKey(sp => sp.PaymentMethodId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<InventoryTransaction>(entity =>
+            {
+                entity.ToTable("InventoryTransaction");
+                entity.HasKey(it => it.TransactionId);
+                entity.Property(it => it.UnitCost).HasPrecision(18, 4);
+                entity.Property(it => it.CreatedAt).HasDefaultValueSql("GETDATE()");
+
+                entity.HasOne(it => it.Product)
+                    .WithMany()
+                    .HasForeignKey(it => it.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(it => it.Batch)
+                    .WithMany()
+                    .HasForeignKey(it => it.BatchId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(it => it.Employee)
+                    .WithMany()
+                    .HasForeignKey(it => it.EmployeeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
         }
-        
     }
 }

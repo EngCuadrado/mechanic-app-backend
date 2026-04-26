@@ -5,6 +5,8 @@ public class Product
 
     public int product_id { get; set; }
 
+    public string barcode { get; set; }
+
     public int supplier_id { get; set; }
 
     public int presentation_id { get; set; }
@@ -19,6 +21,8 @@ public class Product
     public int min_stock_units { get; set; } = 10;
 
     // Lógica de Precios
+    public decimal cost_price { get; set; } = 0m;
+
     public decimal? price_full_presentation { get; set; }
 
     public decimal? price_per_unit { get; set; }

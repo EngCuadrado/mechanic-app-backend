@@ -55,13 +55,29 @@ namespace WebApi.GraphQL.Mutations
                     if (batch.expiration_date <= DateTime.Now)
                         throw new Exception($"El lote {batch.batch_code} está vencido (Expiró: {batch.expiration_date:dd/MM/yyyy}).");
 
-                    // Precios
-                    decimal unitPrice = detailInput.IsFullPresentation 
-                        ? (product.price_full_presentation / (product.units_per_presentation > 0 ? product.units_per_presentation : 1)) ?? 0
+                    //// Precios
+                    //decimal unitPrice = detailInput.IsFullPresentation 
+                    //    ? (product.price_full_presentation / (product.units_per_presentation > 0 ? product.units_per_presentation : 1)) ?? 0
+                    //    : product.price_per_unit ?? 0;
+
+                    decimal unitPrice = detailInput.IsFullPresentation
+                        ? product.price_full_presentation ?? 0
                         : product.price_per_unit ?? 0;
 
-                    if (unitPrice <= 0)
-                        throw new Exception($"El producto {detailInput.ProductId} no tiene un precio configurado.");
+                    int unitsToDeduct = detailInput.IsFullPresentation
+                        ? detailInput.Quantity * (product.units_per_presentation > 0 ? product.units_per_presentation : 1)
+                        : detailInput.Quantity;
+
+                    // CORRECCIÓN: Validación de Inventario usando unitsToDeduct en lugar de detailInput.Quantity
+                    if (batch.current_quantity_units < unitsToDeduct)
+                        throw new Exception($"Inventario insuficiente para el producto {detailInput.ProductId} en el lote {batch.batch_code}. Disponible: {batch.current_quantity_units}, Requerido: {unitsToDeduct}");
+
+                    // Validación de Expiración
+                    if (batch.expiration_date <= DateTime.Now)
+                        throw new Exception($"El lote {batch.batch_code} está vencido (Expiró: {batch.expiration_date:dd/MM/yyyy}).");
+
+                    //if (unitPrice <= 0)
+                    //    throw new Exception($"El producto {detailInput.ProductId} no tiene un precio configurado.");
 
                     // Cálculos de línea
                     decimal lineSubtotal = unitPrice * detailInput.Quantity;
@@ -106,7 +122,7 @@ namespace WebApi.GraphQL.Mutations
                         LineTotal = lineTotal
                     });
 
-                    inventoryUpdates.Add((batch, detailInput.Quantity));
+                    inventoryUpdates.Add((batch, unitsToDeduct));
                 }
 
                 // PASO G: Validación de Pagos (Antes de insertar para fallar rápido)
@@ -143,11 +159,11 @@ namespace WebApi.GraphQL.Mutations
 
                     // Descuento de Inventario
                     var updateInfo = inventoryUpdates.First(u => u.batch.batch_id == detail.BatchId);
-                    updateInfo.batch.current_quantity_units -= detail.Quantity;
+                    updateInfo.batch.current_quantity_units -= updateInfo.quantity;
                     
                     // Sincronizar stock total en Product
-                    var product = await context.Products.FindAsync(detail.ProductId);
-                    product.stock_units -= detail.Quantity;
+                    var productToUpdate = await context.Products.FindAsync(detail.ProductId);
+                    productToUpdate.stock_units -= updateInfo.quantity;
 
                     // PASO F: Kardex
                     context.InventoryTransactions.Add(new InventoryTransaction
@@ -156,9 +172,9 @@ namespace WebApi.GraphQL.Mutations
                         BatchId = detail.BatchId,
                         EmployeeId = input.EmployeeId,
                         TransactionType = "SALE",
-                        QuantityMoved = -detail.Quantity,
+                        QuantityMoved = -updateInfo.quantity,
                         StockAfterTransaction = updateInfo.batch.current_quantity_units,
-                        UnitCost = product.cost_price,
+                        UnitCost = productToUpdate.cost_price,
                         ReferenceDocumentType = "SALE_INVOICE",
                         ReferenceDocumentId = sale.SaleId,
                         CreatedAt = DateTime.Now

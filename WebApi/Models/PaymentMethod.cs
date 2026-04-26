@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApi.Models;
 
-public class PaymentMethod
+public class    PaymentMethod
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

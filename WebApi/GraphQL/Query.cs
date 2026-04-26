@@ -201,5 +201,14 @@
             return context.Customers;
         }
 
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<PaymentMethod> GetPaymentMethods([Service] AppDbContext context)
+        {
+            return context.PaymentMethods;
+        }
+
     }
 }

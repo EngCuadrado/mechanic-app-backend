@@ -1,3 +1,5 @@
+#nullable disable
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using WebApi.Models.Empleados;
@@ -23,7 +25,7 @@ public class Medicine
     [MaxLength(150)]
     public string name { get; set; }
 
-    public string? description { get; set; }
+    public string description { get; set; }
 
     public bool requires_prescription { get; set; } = false;
 

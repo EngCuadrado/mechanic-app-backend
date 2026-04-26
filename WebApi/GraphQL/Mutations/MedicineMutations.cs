@@ -22,12 +22,14 @@ namespace WebApi.GraphQL.Mutations
                 // 1. Crear el Producto
                 var product = new Product
                 {
+                    barcode = input.Barcode,
                     supplier_id = input.SupplierId,
                     presentation_id = input.PresentationId,
                     unit_of_measure_id = input.UnitOfMeasureId,
                     units_per_presentation = input.UnitsPerPresentation,
                     stock_units = input.StockUnits,
                     min_stock_units = input.MinStockUnits,
+                    cost_price = input.CostPrice,
                     price_full_presentation = input.PriceFullPresentation,
                     price_per_unit = input.PricePerUnit,
                     is_fractionable = input.IsFractionable,

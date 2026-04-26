@@ -173,5 +173,42 @@
             return context.Manufacturers;
         }
 
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<PaymentMethod> GetActivePaymentMethods([Service] AppDbContext context)
+        {
+            return context.PaymentMethods.Where(p => p.IsActive);
+        }
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Promotion> GetActivePromotions([Service] AppDbContext context)
+        {
+            return context.Promotions.Where(p => p.IsActive);
+        }
+
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Customer> GetCustomers([Service] AppDbContext context)
+        {
+            return context.Customers;
+        }
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<PaymentMethod> GetPaymentMethods([Service] AppDbContext context)
+        {
+            return context.PaymentMethods;
+        }
+
     }
 }

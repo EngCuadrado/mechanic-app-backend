@@ -11,6 +11,7 @@ namespace WebApi.GraphQL.Inputs
 
     public record AddMedicineInput(
         string Name,
+        string Barcode,
         int IdBrand,
         int ManufacturerId,
         int CategoryId,
@@ -21,6 +22,7 @@ namespace WebApi.GraphQL.Inputs
         int UnitOfMeasureId,
         int UnitsPerPresentation,
         string Currency,
+        decimal CostPrice,
         decimal PricePerUnit,
         decimal PriceFullPresentation,
         bool IsFractionable,

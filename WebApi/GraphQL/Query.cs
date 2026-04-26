@@ -188,8 +188,17 @@
         [UseSorting]
         public IQueryable<Promotion> GetActivePromotions([Service] AppDbContext context)
         {
-            var now = DateTime.Now;
             return context.Promotions.Where(p => p.IsActive);
+        }
+
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Customer> GetCustomers([Service] AppDbContext context)
+        {
+            return context.Customers;
         }
 
     }

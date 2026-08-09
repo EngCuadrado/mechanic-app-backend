@@ -12,6 +12,11 @@ namespace WebApi.Data
         {
         }
 
+
+        public DbSet<User> Users { get; set; }
+
+        // --------------------------------------------
+
         public DbSet<Employee> Employees { get; set; }
         public DbSet<EmployeeRoles> EmployeeRoles { get; set; }
         public DbSet<EmployeeStatuses> EmployeeStatuses { get; set; }
@@ -56,6 +61,37 @@ namespace WebApi.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.ToTable("users");
+                entity.HasKey(u => u.userId);
+                entity.Property(u => u.userId)
+                              .HasColumnName("user_id");
+
+                entity.Property(u => u.name)
+                                .HasColumnName("name");
+
+                entity.Property(u => u.lastName)
+                                .HasColumnName("last_name");  
+
+                entity.Property(u => u.email)
+                      .HasColumnName("email")
+                      .HasMaxLength(255);
+
+                entity.Property(u => u.passwordHash)
+                      .HasColumnName("password_hash")
+                      .HasMaxLength(255);
+
+                entity.Property(u => u.role)
+                      .HasColumnName("role")
+                      .HasMaxLength(255);
+
+                entity.Property(u => u.isActive)
+                      .HasColumnName("is_active");
+            });
+
 
             modelBuilder.Entity<Employee>(entity =>
             {

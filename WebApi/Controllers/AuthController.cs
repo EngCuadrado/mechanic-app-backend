@@ -28,51 +28,38 @@ namespace WebApi.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<ApiResponse>> Login([FromBody] LoginDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto?.user) || string.IsNullOrWhiteSpace(dto?.password))
+            if (string.IsNullOrWhiteSpace(dto?.email) || string.IsNullOrWhiteSpace(dto?.password))
                 return BadRequest(new ApiResponse { success = false, message = "Usuario y contraseña son obligatorios" });
 
-            var username = dto.user.Trim();
+            var user = await _dataBase.Users.Where(u => u.email == dto.email).FirstOrDefaultAsync();
 
-            // 1) Buscar usuario (incluye rol/estado)
-            var emp = await _dataBase.Employees
-                .Include(e => e.EmployeeRole)
-                .Include(e => e.EmployeeStatus)
-                .FirstOrDefaultAsync(e => e.user.ToLower() == username.ToLower());
-
-            if (emp == null)
+            if (user == null)
                 return Unauthorized(new ApiResponse { success = false, message = "Credenciales inválidas" });
 
-            // 2) Validar password (plain text según tu modelo actual)
-            // RECOMENDADO: aplicar hashing en cuanto puedas.
-            var okPassword = emp.password == dto.password;
+            var okPassword = user.passwordHash == dto.password;
             if (!okPassword)
                 return Unauthorized(new ApiResponse { success = false, message = "Credenciales inválidas" });
 
-            // 3) Validar estado (opcional: por ejemplo, solo status activo = 1)
-            if (emp.EmployeeStatusId != 1)
+            if (!user.isActive)
                 return Forbid(); // o Unauthorized con mensaje
 
-            // 4) Generar JWT
-            var (tokenString, expires) = GenerateJwt(emp);
+            var (tokenString, expires) = GenerateJwt(user);
 
-            var resp = new LoginResponseDto
+            var resp = new
             {
                 token = tokenString,
                 expiresAt = expires,
-                EmployeeId = emp.EmployeeId,
-                names = emp.names,
-                lastnames = emp.lastnames,
-                username = emp.user,
-                roleId = emp.EmployeeRoleId,
-                roleName = emp.EmployeeRole?.name,
-                statusId = emp.EmployeeStatusId,
-                statusName = emp.EmployeeStatus?.name
+                userId = user.userId,
+                //names = emp.names,
+                //lastnames = emp.lastnames,
+                email = user.email,
+                role = user.role
             };
 
             return Ok(new ApiResponse { success = true, data = resp });
         }
 
-        private (string token, DateTime expires) GenerateJwt(Employee emp)
+        private (string token, DateTime expires) GenerateJwt(User user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -82,22 +69,22 @@ namespace WebApi.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, emp.EmployeeId.ToString()),
-                new Claim(JwtRegisteredClaimNames.UniqueName, emp.user ?? ""),
-                new Claim("employeeId", emp.EmployeeId.ToString()),
-                new Claim("username", emp.user ?? ""),
-                new Claim("names", emp.names ?? ""),
-                new Claim("lastnames", emp.lastnames ?? ""),
+                new Claim(JwtRegisteredClaimNames.Sub, user.userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.email ?? ""),
+                new Claim("userId", user.userId.ToString()),
+                //new Claim("username", emp.user ?? ""),
+                //new Claim("names", emp.names ?? ""),
+                //new Claim("lastnames", emp.lastnames ?? ""),
+                new Claim("email", user.email ?? ""),
+                //new Claim("phone", emp.phone ?? ""),
                 //new Claim("email", emp.email ?? ""),
-                new Claim("phone", emp.phone ?? ""),
-                new Claim("email", emp.email ?? ""),
-                new Claim("urlPhoto", emp.url_photo ?? ""),
-                new Claim("roleId", emp.EmployeeRoleId.ToString()),
-                new Claim("roleName", emp.EmployeeRole?.name ?? ""),
-                new Claim("statusId", emp.EmployeeStatusId.ToString()), 
-                new Claim("statusName", emp.EmployeeStatus?.name ?? ""),
+                //new Claim("urlPhoto", emp.url_photo ?? ""),
+                //new Claim("roleId", emp.EmployeeRoleId.ToString()),
+                new Claim("role", user.role ?? ""),
+                //new Claim("statusId", emp.EmployeeStatusId.ToString()), 
+                //new Claim("statusName", emp.EmployeeStatus?.name ?? ""),
                 //new Claim("status", emp.status ?? ""),
-                new Claim("hiringDate", emp.hiring_date.ToString("yyyy-MM-dd"))
+                //new Claim("hiringDate", emp.hiring_date.ToString("yyyy-MM-dd"))
             };
 
             var jwt = new JwtSecurityToken(

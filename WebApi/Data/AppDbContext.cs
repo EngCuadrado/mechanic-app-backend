@@ -15,6 +15,10 @@ namespace WebApi.Data
 
         public DbSet<User> Users { get; set; }
 
+        public DbSet<MechanicSpecialties> mechanicSpecialties { get; set; }
+
+        public DbSet<Mechanics> Mechanics { get; set; }
+
         // --------------------------------------------
 
         public DbSet<Employee> Employees { get; set; }
@@ -91,6 +95,46 @@ namespace WebApi.Data
                 entity.Property(u => u.isActive)
                       .HasColumnName("is_active");
             });
+
+
+            modelBuilder.Entity<MechanicSpecialties>(entity =>
+            {
+                entity.ToTable("mechanic_specialties");
+                entity.HasKey(e => e.SpecialtyId);
+                entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
+            });
+
+            modelBuilder.Entity<Mechanics>(entity =>
+            {
+                entity.ToTable("mechanics");
+                entity.HasKey(e => e.MechanicId);
+                entity.Property(e => e.FirstName).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.LastName).HasMaxLength(255);
+                entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+                // Configuración de la llave foránea corregida:
+                entity.HasOne(e => e.Specialty)           // El mecánico tiene 1 especialidad (propiedad de navegación)
+                      .WithMany(c => c.Mechanics)         // La especialidad tiene muchos mecánicos (colección)
+                      .HasForeignKey(e => e.SpecialtyId)  // La columna de la llave foránea (el int)
+                      .OnDelete(DeleteBehavior.SetNull);  // Coincide con tu SQL (ON DELETE SET NULL)
+            });
+
+            /*
+             CREATE TABLE [mechanics] (
+                  [mechanic_id] INT IDENTITY(1,1) PRIMARY KEY,
+                  [first_name] nvarchar(255),
+                  [last_name] nvarchar(255),
+                  [specialty_id] INT, -- Cambiado a INT para coincidir con la llave primaria
+                  [is_active] BIT DEFAULT 1,
+  
+                  -- Definición de la llave foránea
+                  CONSTRAINT [FK_mechanics_specialties] 
+                    FOREIGN KEY ([specialty_id]) 
+                    REFERENCES [mechanic_specialties]([specialty_id])
+                    ON DELETE SET NULL -- Opcional: define qué pasa si se borra la especialidad
+                )
+                GO
+             */
 
 
             modelBuilder.Entity<Employee>(entity =>

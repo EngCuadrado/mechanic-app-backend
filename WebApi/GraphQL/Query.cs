@@ -1,4 +1,4 @@
-﻿namespace WebApi.GraphQL
+namespace WebApi.GraphQL
 {
     // DbContext
     using WebApi.Data; 
@@ -208,6 +208,24 @@
         public IQueryable<PaymentMethod> GetPaymentMethods([Service] AppDbContext context)
         {
             return context.PaymentMethods;
+        }
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<MechanicSpecialties> GetMechanicSpecialties([Service] AppDbContext context)
+        {
+            return context.mechanicSpecialties;
+        }
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Mechanics> GetMechanics([Service] AppDbContext context)
+        {
+            return context.Mechanics;
         }
 
     }

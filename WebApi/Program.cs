@@ -86,6 +86,7 @@ builder.Services
     .AddTypeExtension<SaleMutations>()
     .AddTypeExtension<MechanicSpecialtyMutations>()
     .AddTypeExtension<MechanicMutations>()
+    .AddTypeExtension<CompanyMutations>()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AddProjections()            // Habilita [UseProjection]
     .AddFiltering()              // Habilita [UseFiltering]

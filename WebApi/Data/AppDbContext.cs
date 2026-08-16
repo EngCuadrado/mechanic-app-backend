@@ -19,6 +19,8 @@ namespace WebApi.Data
 
         public DbSet<Mechanics> Mechanics { get; set; }
 
+        public DbSet<Company> Companies { get; set; }
+
         // --------------------------------------------
 
         public DbSet<Employee> Employees { get; set; }
@@ -118,6 +120,22 @@ namespace WebApi.Data
                       .HasForeignKey(e => e.SpecialtyId)  // La columna de la llave foránea (el int)
                       .OnDelete(DeleteBehavior.SetNull);  // Coincide con tu SQL (ON DELETE SET NULL)
             });
+
+            modelBuilder.Entity<Company>(entity =>
+            {
+                entity.ToTable("companies");
+                entity.HasKey(e => e.companyId);
+                entity.Property(e => e.name).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.taxId).HasMaxLength(255);
+                entity.Property(e => e.billingAddress).HasMaxLength(255);
+                entity.Property(e => e.contactEmail).HasMaxLength(255);
+                entity.Property(e => e.contactPhone).HasMaxLength(255);
+                entity.Property(e => e.defaultCurrency).HasMaxLength(10);
+                entity.Property(e => e.logoUrl).HasMaxLength(255);
+                entity.Property(e => e.isActive).HasDefaultValue(true);
+            });
+
+            
 
             /*
              CREATE TABLE [mechanics] (

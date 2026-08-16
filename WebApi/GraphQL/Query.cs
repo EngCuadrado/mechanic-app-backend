@@ -228,5 +228,14 @@ namespace WebApi.GraphQL
             return context.Mechanics;
         }
 
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Company> GetCompanies([Service] AppDbContext context)
+        {
+            return context.Companies;
+        }
+
     }
 }

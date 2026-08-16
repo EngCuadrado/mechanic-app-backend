@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using WebApi.Data;
 using WebApi.Models;
 using HotChocolate;
@@ -14,10 +15,12 @@ namespace WebApi.GraphQL.Mutations
             string lastName,
             int? specialtyId)
         {
+            MechanicSpecialties specialtyExists = null;
+
             // Opcional: Validar que la especialidad exista si specialtyId tiene valor
             if (specialtyId.HasValue)
             {
-                var specialtyExists = await context.mechanicSpecialties.FindAsync(specialtyId.Value);
+                specialtyExists = await context.mechanicSpecialties.FindAsync(specialtyId.Value);
                 if (specialtyExists == null)
                 {
                     throw new GraphQLException("La especialidad asignada no existe.");
@@ -29,7 +32,8 @@ namespace WebApi.GraphQL.Mutations
                 FirstName = firstName,
                 LastName = lastName,
                 SpecialtyId = specialtyId,
-                IsActive = true
+                IsActive = true,
+                Specialty = specialtyExists
             };
 
             context.Mechanics.Add(newMechanic);
@@ -45,7 +49,9 @@ namespace WebApi.GraphQL.Mutations
             string lastName,
             int? specialtyId)
         {
-            var mechanic = await context.Mechanics.FindAsync(mechanicId);
+            var mechanic = await context.Mechanics
+                .Include(m => m.Specialty)
+                .FirstOrDefaultAsync(m => m.MechanicId == mechanicId);
 
             if (mechanic == null)
             {
@@ -59,6 +65,11 @@ namespace WebApi.GraphQL.Mutations
                 {
                     throw new GraphQLException("La especialidad asignada no existe.");
                 }
+                mechanic.Specialty = specialtyExists;
+            }
+            else if (!specialtyId.HasValue)
+            {
+                mechanic.Specialty = null;
             }
 
             mechanic.FirstName = firstName;

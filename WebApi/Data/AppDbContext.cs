@@ -21,6 +21,8 @@ namespace WebApi.Data
 
         public DbSet<Company> Companies { get; set; }
 
+        public DbSet<InventoryPart> InventoryParts { get; set; }
+
         // --------------------------------------------
 
         public DbSet<Employee> Employees { get; set; }
@@ -133,6 +135,12 @@ namespace WebApi.Data
                 entity.Property(e => e.defaultCurrency).HasMaxLength(10);
                 entity.Property(e => e.logoUrl).HasMaxLength(255);
                 entity.Property(e => e.isActive).HasDefaultValue(true);
+            });
+
+            modelBuilder.Entity<InventoryPart>(entity =>
+            {
+                entity.ToTable("inventory_parts");
+                entity.HasKey(e => e.inventoryPartId);
             });
 
             

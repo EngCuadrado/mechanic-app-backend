@@ -237,5 +237,14 @@ namespace WebApi.GraphQL
             return context.Companies;
         }
 
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<InventoryPart> GetInventoryParts([Service] AppDbContext context)
+        {
+            return context.InventoryParts;
+        }
+
     }
 }

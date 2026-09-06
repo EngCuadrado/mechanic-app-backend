@@ -10,6 +10,7 @@ namespace WebApi.GraphQL.Mutations
     {
         public async Task<InventoryPart> AddInventoryPartAsync(
             [Service] AppDbContext context,
+            [Service] BlobStorageService blobStorageService,
             string? imageUrl,
             string name,
             int stockQuantity,
@@ -18,11 +19,26 @@ namespace WebApi.GraphQL.Mutations
             decimal totalUnitCost,
             decimal basePrice,
             string currency,
-            int minStockAlert)
+            int minStockAlert,
+            IFile? imageFile)
         {
+            string finalImageUrl = imageUrl ?? "";
+
+            if (imageFile != null)
+            {
+                var uid = Guid.NewGuid().ToString();
+                var blobName = $"inventory/{uid}.JPEG";
+
+                using var memoryStream = new MemoryStream();
+                await imageFile.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                finalImageUrl = await blobStorageService.UploadImageAsync(memoryStream, blobName, "photos");
+            }
+
             var newInventoryPart = new InventoryPart
             {
-                imageUrl = imageUrl,
+                imageUrl = finalImageUrl,
                 name = name,
                 stockQuantity = stockQuantity,
                 unitCost = unitCost,
@@ -41,6 +57,7 @@ namespace WebApi.GraphQL.Mutations
 
         public async Task<InventoryPart> UpdateInventoryPartAsync(
             [Service] AppDbContext context,
+            [Service] BlobStorageService blobStorageService,
             int inventoryPartId,
             string? imageUrl,
             string name,
@@ -50,7 +67,8 @@ namespace WebApi.GraphQL.Mutations
             decimal totalUnitCost,
             decimal basePrice,
             string currency,
-            int minStockAlert)
+            int minStockAlert,
+            IFile? imageFile)
         {
             var part = await context.InventoryParts.FindAsync(inventoryPartId);
 
@@ -59,7 +77,25 @@ namespace WebApi.GraphQL.Mutations
                 throw new GraphQLException("El repuesto no existe.");
             }
 
-            part.imageUrl = imageUrl;
+            string finalImageUrl = part.imageUrl;
+
+            if (imageFile != null)
+            {
+                var uid = Guid.NewGuid().ToString();
+                var blobName = $"inventory/{uid}.JPEG";
+
+                using var memoryStream = new MemoryStream();
+                await imageFile.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                finalImageUrl = await blobStorageService.UploadImageAsync(memoryStream, blobName, "photos");
+            }
+            else if (imageUrl != null)
+            {
+                finalImageUrl = imageUrl;
+            }
+
+            part.imageUrl = finalImageUrl;
             part.name = name;
             part.stockQuantity = stockQuantity;
             part.unitCost = unitCost;

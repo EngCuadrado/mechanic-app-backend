@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -5,6 +6,7 @@ using System.Text;
 using WebApi.Data;
 using WebApi.GraphQL;
 using WebApi.GraphQL.Mutations;
+using HotChocolate.Types;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +68,10 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddScoped<BlobStorageService>();
+builder.Services.AddSingleton(x => new BlobServiceClient(builder.Configuration.GetValue<string>("AzureStorage:ConnectionString")));
+
+
 // --- SERVICIOS DE HOT CHOCOLATE ---
 builder.Services
     .AddGraphQLServer()
@@ -88,6 +94,7 @@ builder.Services
     .AddTypeExtension<MechanicMutations>()
     .AddTypeExtension<CompanyMutations>()
     .AddTypeExtension<InventoryPartMutations>()
+    .AddType<UploadType>()       // Soporte para IFile
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AddProjections()            // Habilita [UseProjection]
     .AddFiltering()              // Habilita [UseFiltering]

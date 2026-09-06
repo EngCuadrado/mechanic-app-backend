@@ -20,10 +20,17 @@ namespace WebApi.Controllers
         private readonly AppDbContext _dataBase;
         private readonly JwtOptions _jwt;
 
-        public AuthController(AppDbContext db, IOptions<JwtOptions> jwtOptions)
+        private readonly BlobStorageService _blobStorageService;
+
+        private readonly IConfiguration _IConfiguration;
+
+
+        public AuthController(AppDbContext db, IOptions<JwtOptions> jwtOptions, BlobStorageService blobStorageService, IConfiguration configuration)
         {
             _dataBase = db;
             _jwt = jwtOptions.Value;
+            _blobStorageService = blobStorageService;
+            _IConfiguration = configuration;
         }
 
         [HttpPost("login")]
@@ -113,6 +120,70 @@ namespace WebApi.Controllers
 
             var tokenString = new JwtSecurityTokenHandler().WriteToken(jwt);
             return (tokenString, expires);
+        }
+
+    
+
+
+        [HttpPost]
+        [Route("uploadImage")]
+        public async Task<ActionResult<string>> OdometerUpload(BlobRequestData request)
+        {
+            if (request.Picture?.FileName == null || request.Picture.Length == 0)
+            {
+                return BadRequest(new { success = false });
+            }
+
+            try
+            {
+                string? base64String = null;
+                string? base64Extension = System.IO.Path.GetExtension(request.Picture.FileName);
+                if (!string.IsNullOrEmpty(base64Extension))
+                    base64Extension = base64Extension.Replace(".", "").ToLower();
+
+                using (var memoryStream64 = new MemoryStream())
+                {
+                    // Copia el contenido del stream del archivo al MemoryStream de forma síncrona
+                    // file.OpenReadStream() abre el stream del archivo subido
+                    request.Picture.CopyTo(memoryStream64);
+
+                    // Convierte los bytes en el MemoryStream a un array de bytes
+                    byte[] fileBytes = memoryStream64.ToArray();
+
+                    // Convierte el array de bytes a una cadena Base64
+                    base64String = Convert.ToBase64String(fileBytes);
+                }
+
+                if (string.IsNullOrEmpty(base64String))
+                {
+                    return BadRequest(new { success = false, error = "El archivo está vacio!", odometer = 0 });
+                }
+
+                using var fileStream = request.Picture.OpenReadStream();
+                using var memoryStream = new MemoryStream();
+                await fileStream.CopyToAsync(memoryStream);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                try
+                {
+                    await _blobStorageService.UploadImageAsync(memoryStream, request.blobName, "photos");
+
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    byte[] byteArray = memoryStream.ToArray();
+
+                    return Ok(new { success = true });
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(new { success = false });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Manejar excepciones y registrar detalles
+                //_logger.LogError(ex, "Error procesando la imagen");
+                return BadRequest(new { success = false });
+            }
         }
 
     }

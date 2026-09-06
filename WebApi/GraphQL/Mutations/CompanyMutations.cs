@@ -11,14 +11,30 @@ namespace WebApi.GraphQL.Mutations
     {
         public async Task<Company> AddCompanyAsync(
             [Service] AppDbContext context,
+            [Service] BlobStorageService blobStorageService,
             string name,
             string taxId,
             string billingAddress,
             string contactEmail,
             string contactPhone,
             string defaultCurrency,
-            string logoUrl)
+            IFile? logoFile)
         {
+            string logoUrl = "";
+
+            if (logoFile != null)
+            {
+                var uid = Guid.NewGuid().ToString();
+                var blobName = $"logo/{uid}.JPEG";
+
+                using var memoryStream = new MemoryStream();
+                await logoFile.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                // Subir al blob storage, asumiendo el contenedor "photos" como en otros endpoints
+                logoUrl = await blobStorageService.UploadImageAsync(memoryStream, blobName, "photos");
+            }
+
             var newCompany = new Company
             {
                 name = name,
@@ -39,6 +55,7 @@ namespace WebApi.GraphQL.Mutations
 
         public async Task<Company> UpdateCompanyAsync(
             [Service] AppDbContext context,
+            [Service] BlobStorageService blobStorageService,
             int companyId,
             string name,
             string taxId,
@@ -46,13 +63,32 @@ namespace WebApi.GraphQL.Mutations
             string contactEmail,
             string contactPhone,
             string defaultCurrency,
-            string logoUrl)
+            string? logoUrl,
+            IFile? logoFile)
         {
             var company = await context.Companies.FindAsync(companyId);
 
             if (company == null)
             {
                 throw new GraphQLException("La compañía no existe.");
+            }
+            
+            string finalLogoUrl = company.logoUrl;
+
+            if (logoFile != null)
+            {
+                var uid = Guid.NewGuid().ToString();
+                var blobName = $"logo/{uid}.JPEG";
+
+                using var memoryStream = new MemoryStream();
+                await logoFile.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                finalLogoUrl = await blobStorageService.UploadImageAsync(memoryStream, blobName, "photos");
+            }
+            else if (logoUrl != null)
+            {
+                finalLogoUrl = logoUrl;
             }
 
             company.name = name;
@@ -61,7 +97,7 @@ namespace WebApi.GraphQL.Mutations
             company.contactEmail = contactEmail;
             company.contactPhone = contactPhone;
             company.defaultCurrency = defaultCurrency;
-            company.logoUrl = logoUrl;
+            company.logoUrl = finalLogoUrl;
 
             await context.SaveChangesAsync();
 

@@ -36,6 +36,9 @@ public class InventoryPart
 
     [Column("min_stock_alert")]
     public int minStockAlert { get; set; }
+
+    [Column("is_active")]
+    public bool isActive { get; set; }
 }
 
 

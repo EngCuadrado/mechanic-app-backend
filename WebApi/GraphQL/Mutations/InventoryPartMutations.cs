@@ -46,7 +46,8 @@ namespace WebApi.GraphQL.Mutations
                 totalUnitCost = totalUnitCost,
                 basePrice = basePrice,
                 currency = string.IsNullOrWhiteSpace(currency) ? "USD" : currency,
-                minStockAlert = minStockAlert
+                minStockAlert = minStockAlert,
+                isActive = true
             };
 
             context.InventoryParts.Add(newInventoryPart);
@@ -126,5 +127,22 @@ namespace WebApi.GraphQL.Mutations
 
             return true;
         }
+    public async Task<InventoryPart> ToggleInventoryPartStatusAsync(
+        [Service] AppDbContext context,
+        int inventoryPartId)
+    {
+        var part = await context.InventoryParts.FindAsync(inventoryPartId);
+
+        if (part == null)
+        {
+            throw new GraphQLException("El repuesto no existe.");
+        }
+
+        part.isActive = !part.isActive;
+
+        await context.SaveChangesAsync();
+
+        return part;
     }
+}
 }

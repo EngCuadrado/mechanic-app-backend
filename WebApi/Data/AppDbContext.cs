@@ -141,6 +141,7 @@ namespace WebApi.Data
             {
                 entity.ToTable("inventory_parts");
                 entity.HasKey(e => e.inventoryPartId);
+                entity.Property(e => e.isActive).HasDefaultValue(true);
             });
 
             

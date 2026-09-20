@@ -1,4 +1,4 @@
-﻿using WebApi.Data;
+using WebApi.Data;
 using WebApi.Models;
 using HotChocolate;
 using HotChocolate.Types;
@@ -8,19 +8,13 @@ namespace WebApi.GraphQL.Mutations
     [ExtendObjectType(typeof(Mutation))]
     public class BrandMutations
     {
-        public async Task<Brands> AddBrandAsync(
+        public async Task<Brand> AddBrandAsync(
             [Service] AppDbContext context, 
-            string name, string phone, string email)
+            string brandName)
         {
-            var now = DateTime.UtcNow;
-            var newBrand = new Brands
+            var newBrand = new Brand
             {
-                name = name,
-                contact_phone = phone,
-                contact_email = email,
-                is_active = true,
-                created_at = now,
-                updated_at = now
+                brandName = brandName
             };
 
             context.Brands.Add(newBrand);
@@ -29,68 +23,40 @@ namespace WebApi.GraphQL.Mutations
             return newBrand;
         }
    
-    public async Task<Brands> UpdateBrandNameAsync(
+        public async Task<Brand> UpdateBrandAsync(
             [Service] AppDbContext context,
-            int id_brand,
-            string newName)
+            int brandId,
+            string newBrandName)
         {
-            // Buscamos la marca por su ID
-            var brand = await context.Brands.FindAsync(id_brand);
+            var brand = await context.Brands.FindAsync(brandId);
 
             if (brand == null)
             {
                 throw new GraphQLException("La marca no existe.");
             }
 
-            // Actualizamos el nombre
-            brand.name = newName;
+            brand.brandName = newBrandName;
 
-            // Guardamos cambios
             await context.SaveChangesAsync();
 
             return brand;
         }
 
-        // 3. Mutación para DESACTIVAR
-        public async Task<Brands> DeactivateBrandAsync(
+        public async Task<bool> DeleteBrandAsync(
             [Service] AppDbContext context,
-            int id_brand)
+            int brandId)
         {
-            var brand = await context.Brands.FindAsync(id_brand);
+            var brand = await context.Brands.FindAsync(brandId);
 
             if (brand == null)
             {
                 throw new GraphQLException("La marca no existe.");
             }
 
-            // Cambiamos el estado a inactivo (false)
-            brand.is_active = false;
-
+            context.Brands.Remove(brand);
             await context.SaveChangesAsync();
 
-            return brand;
+            return true;
         }
-
-        public async Task<Brands> ToggleBrandStatusAsync(
-    [Service] AppDbContext context,
-    int id_brand)
-        {
-            var brand = await context.Brands.FindAsync(id_brand);
-
-            if (brand == null)
-            {
-                throw new GraphQLException("La marca no existe.");
-            }
-
-            // LÓGICA DE SWITCH:
-            // El operador '!' invierte el valor booleano.
-            // Si es true, se vuelve false. Si es false, se vuelve true.
-            brand.is_active = !brand.is_active;
-
-            await context.SaveChangesAsync();
-
-            return brand;
-        }
-
     }
 }

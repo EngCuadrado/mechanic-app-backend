@@ -44,15 +44,25 @@ namespace WebApi.GraphQL
             return context.EmployeeStatuses;
         }
 
+
         [UsePaging]
-        [UseProjection] // Lee las relaciones.
-        [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")
-        [UseSorting]    // (Opcional) Permite ordenar (ej: order by names)    
-        public IQueryable<Brands> GetBrands([Service] AppDbContext context)
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Brand> GetVehicleBrands([Service] AppDbContext context)
         {
             return context.Brands;
         }
-        
+
+        [UsePaging]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Model> GetVehicleModels([Service] AppDbContext context)
+        {
+            return context.Models;
+        }
+
         [UsePaging]
         [UseProjection] // Lee las relaciones.
         [UseFiltering]  // (Opcional) Permite filtrar (ej: where name = "...")

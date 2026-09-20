@@ -34,9 +34,6 @@ public class Medicine
     [ForeignKey("product_id")]
     public virtual Product product { get; set; }
 
-    [ForeignKey("id_brand")]
-    public virtual Brands brand { get; set; }
-
     [ForeignKey("manufacturer_id")]
     public virtual Manufacturer manufacturer { get; set; }
 

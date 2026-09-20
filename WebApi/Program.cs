@@ -82,6 +82,7 @@ builder.Services
     .AddTypeExtension<ActiveIngredientMutations>()
     .AddTypeExtension<AdministrationRouteMutations>()
     .AddTypeExtension<CategoryMutations>()
+    .AddTypeExtension<ModelMutations>()
     .AddTypeExtension<ManufacturerMutations>()
     .AddTypeExtension<PresentationMutations>()
     .AddTypeExtension<UnitOfMeasureMutations>() 

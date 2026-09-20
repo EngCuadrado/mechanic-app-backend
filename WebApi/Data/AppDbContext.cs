@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Models;
 using WebApi.Models.Empleados;
@@ -23,13 +23,16 @@ namespace WebApi.Data
 
         public DbSet<InventoryPart> InventoryParts { get; set; }
 
+        public DbSet<Brand> Brands  { get; set; }
+
+        public DbSet<Model> Models { get; set; }
+
         // --------------------------------------------
 
         public DbSet<Employee> Employees { get; set; }
         public DbSet<EmployeeRoles> EmployeeRoles { get; set; }
         public DbSet<EmployeeStatuses> EmployeeStatuses { get; set; }
 
-        public DbSet<Brands> Brands { get; set; }
         
         public DbSet<Category> Categories { get; set; }
         
@@ -144,6 +147,27 @@ namespace WebApi.Data
                 entity.Property(e => e.isActive).HasDefaultValue(true);
             });
 
+            modelBuilder.Entity<Brand>(entity =>
+            {
+                entity.ToTable("brands");
+                entity.HasKey(e => e.brandId);
+                entity.Property(e => e.brandName).IsRequired().HasMaxLength(255);
+            });
+
+            modelBuilder.Entity<Model>(entity =>
+            {
+                entity.ToTable("models");
+                entity.HasKey(e => e.modelId);
+                entity.Property(e => e.modelName).IsRequired().HasMaxLength(255);
+
+                entity.HasOne(e => e.Brand)
+                      .WithMany(b => b.Models)
+                      .HasForeignKey(e => e.brandId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+
+
             
 
             /*
@@ -204,16 +228,6 @@ namespace WebApi.Data
                 entity.Property(est => est.status).HasDefaultValue(true);
             });
 
-            modelBuilder.Entity<Brands>(entity =>
-            {
-                entity.ToTable("brands");
-                entity.HasKey(b => b.id_brand);
-                entity.Property(b => b.name).IsRequired().HasMaxLength(100);
-                entity.Property(b => b.name).IsRequired(); 
-                entity.Property(b => b.logo_url).HasMaxLength(250);
-                entity.Property(b => b.contact_phone).HasMaxLength(15);
-                entity.Property(b => b.contact_email).HasMaxLength(100);
-            });
 
             modelBuilder.Entity<Category>(entity =>
             {
@@ -337,11 +351,6 @@ namespace WebApi.Data
                     .WithOne() // Si Product no tiene una propiedad virtual Medicine
                     .HasForeignKey<Medicine>(m => m.product_id)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(m => m.brand)
-                    .WithMany()
-                    .HasForeignKey(m => m.id_brand)
-                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasOne(m => m.manufacturer)
                     .WithMany()

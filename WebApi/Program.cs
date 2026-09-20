@@ -83,6 +83,7 @@ builder.Services
     .AddTypeExtension<AdministrationRouteMutations>()
     .AddTypeExtension<CategoryMutations>()
     .AddTypeExtension<ModelMutations>()
+    .AddTypeExtension<VehicleMutations>()
     .AddTypeExtension<ManufacturerMutations>()
     .AddTypeExtension<PresentationMutations>()
     .AddTypeExtension<UnitOfMeasureMutations>() 
@@ -98,10 +99,9 @@ builder.Services
     .AddType<UploadType>()       // Soporte para IFile
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AddProjections()            // Habilita [UseProjection]
-    .AddFiltering()              // Habilita [UseFiltering]
-    .AddSorting()               // Habilita [UseSorting]
-    .AddCostAnalyzer() 
-    .ModifyCostOptions(o => o.MaxFieldCost = 5000);
+    .AddFiltering()
+    .ModifyCostOptions(opt => opt.EnforceCostLimits = false) // Reemplazo directo
+    .AddSorting();
 
 var app = builder.Build();
 

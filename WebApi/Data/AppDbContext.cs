@@ -27,6 +27,8 @@ namespace WebApi.Data
 
         public DbSet<Model> Models { get; set; }
 
+        public DbSet<Vehicle> Vehicles { get; set; }
+
         // --------------------------------------------
 
         public DbSet<Employee> Employees { get; set; }
@@ -164,6 +166,17 @@ namespace WebApi.Data
                       .WithMany(b => b.Models)
                       .HasForeignKey(e => e.brandId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Vehicle>(entity =>
+            {
+                entity.ToTable("vehicles");
+                entity.HasKey(e => e.vehicleId);
+
+                // Assuming status is stored as string in the database
+                entity.Property(e => e.status)
+                      .HasConversion<string>()
+                      .HasMaxLength(255);
             });
 
 

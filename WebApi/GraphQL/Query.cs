@@ -45,7 +45,7 @@ namespace WebApi.GraphQL
         }
 
 
-        [UsePaging]
+        [UsePaging(MaxPageSize = 1000)]
         [UseProjection]
         [UseFiltering]
         [UseSorting]
@@ -54,13 +54,22 @@ namespace WebApi.GraphQL
             return context.Brands;
         }
 
-        [UsePaging]
+        [UsePaging(MaxPageSize = 1000)]
         [UseProjection]
         [UseFiltering]
         [UseSorting]
         public IQueryable<Model> GetVehicleModels([Service] AppDbContext context)
         {
             return context.Models;
+        }
+
+        [UsePaging(MaxPageSize = 1000)]
+        [UseProjection]
+        [UseFiltering]
+        [UseSorting]
+        public IQueryable<Vehicle> GetVehicles([Service] AppDbContext context)
+        {
+            return context.Vehicles;
         }
 
         [UsePaging]

@@ -17,37 +17,37 @@ public class Vehicle
     public int modelId { get; set; }
 
     [Column("plate")]
-    public string plate { get; set; }
+    public string? plate { get; set; }
 
     [Column("vin")]
-    public string vin { get; set; }
+    public string? vin { get; set; }
 
     [Column("chassis_number")]
-    public string chassisNumber { get; set; }
+    public string? chassisNumber { get; set; }
 
     [Column("year")]
-    public int year { get; set; }
+    public int? year { get; set; }
 
     [Column("current_mileage")]
-    public int currentMilage { get; set; }
+    public int? currentMilage { get; set; }
 
     [Column("next_maintenance_date")]
-    public DateOnly nextMaintenanceDate { get; set; }
+    public DateOnly? nextMaintenanceDate { get; set; }
 
     [Column("next_maintenance_mileage")]
-    public int nextMaintenanceMilage { get; set; }
+    public int? nextMaintenanceMilage { get; set; }
 
     [Column("insurance_expiration_date")]
-    public DateOnly insuranceExpirationDate { get; set; }
+    public DateOnly? insuranceExpirationDate { get; set; }
 
     [Column("mechanical_inspection_expiration")]
-    public DateOnly mechanicalInspectionExpiration { get; set; }
+    public DateOnly? mechanicalInspectionExpiration { get; set; }
 
     [Column("emissions_inspection_expiration")]
-    public DateOnly emissionsInspectionExpiration { get; set; }
+    public DateOnly? emissionsInspectionExpiration { get; set; }
 
     [Column("status")]
-    public VehicleStatuses status { get; set; } = VehicleStatuses.DISPONIBLE;
+    public VehicleStatuses? status { get; set; } = VehicleStatuses.DISPONIBLE;
 
     [ForeignKey("companyId")]
     public Company? Company { get; set; }

@@ -14,22 +14,22 @@ public class Company
     public string name { get; set; }
 
     [Column("tax_id")]
-    public string taxId { get; set; }
+    public string? taxId { get; set; }
 
     [Column("billing_address")]
-    public string billingAddress { get; set; }
+    public string? billingAddress { get; set; }
 
     [Column("contact_email")]
-    public string contactEmail { get; set; }
+    public string? contactEmail { get; set; }
 
     [Column("contact_phone")]
-    public string contactPhone { get; set; }
+    public string? contactPhone { get; set; }
 
     [Column("default_currency")]
-    public string defaultCurrency { get; set; }
+    public string? defaultCurrency { get; set; }
 
     [Column("logo_url")]
-    public string logoUrl { get; set; }
+    public string? logoUrl { get; set; }
 
     [Column("is_active")]
     public bool isActive { get; set; }

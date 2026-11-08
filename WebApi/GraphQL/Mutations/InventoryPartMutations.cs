@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using WebApi.Data;
 using WebApi.Models;
 using HotChocolate;
@@ -13,15 +14,17 @@ namespace WebApi.GraphQL.Mutations
             [Service] BlobStorageService blobStorageService,
             string? imageUrl,
             string name,
-            int stockQuantity,
             decimal unitCost,
             decimal taxCost,
             decimal totalUnitCost,
             decimal basePrice,
             string currency,
             int minStockAlert,
-            IFile? imageFile)
+            IFile? imageFile,
+            ClaimsPrincipal? user,
+            int initialStock = 0)
         {
+            if (initialStock < 0) throw new GraphQLException("El stock inicial no puede ser negativo.");
             string finalImageUrl = imageUrl ?? "";
 
             if (imageFile != null)
@@ -40,7 +43,6 @@ namespace WebApi.GraphQL.Mutations
             {
                 imageUrl = finalImageUrl,
                 name = name,
-                stockQuantity = stockQuantity,
                 unitCost = unitCost,
                 taxCost = taxCost,
                 totalUnitCost = totalUnitCost,
@@ -50,9 +52,27 @@ namespace WebApi.GraphQL.Mutations
                 isActive = true
             };
 
+            // El stock nace en 0 (EF no lo escribe); el saldo inicial entra como movimiento 'Inicial'.
+            using var transaction = await context.Database.BeginTransactionAsync();
             context.InventoryParts.Add(newInventoryPart);
             await context.SaveChangesAsync();
 
+            if (initialStock > 0)
+            {
+                context.InventoryMovements.Add(new InventoryMovement
+                {
+                    partId = newInventoryPart.inventoryPartId,
+                    quantity = initialStock,
+                    movementType = "Inicial",
+                    notes = "Stock inicial",
+                    createdBy = WorkOrderSupport.CurrentUserId(user),
+                    createdAt = DateTime.Now
+                });
+                await context.SaveChangesAsync();
+            }
+            await transaction.CommitAsync();
+
+            await context.Entry(newInventoryPart).ReloadAsync(); // trae el stock calculado por el trigger
             return newInventoryPart;
         }
 
@@ -62,7 +82,6 @@ namespace WebApi.GraphQL.Mutations
             int inventoryPartId,
             string? imageUrl,
             string name,
-            int stockQuantity,
             decimal unitCost,
             decimal taxCost,
             decimal totalUnitCost,
@@ -98,7 +117,6 @@ namespace WebApi.GraphQL.Mutations
 
             part.imageUrl = finalImageUrl;
             part.name = name;
-            part.stockQuantity = stockQuantity;
             part.unitCost = unitCost;
             part.taxCost = taxCost;
             part.totalUnitCost = totalUnitCost;

@@ -96,6 +96,16 @@ builder.Services
     .AddTypeExtension<MechanicMutations>()
     .AddTypeExtension<CompanyMutations>()
     .AddTypeExtension<InventoryPartMutations>()
+    .AddTypeExtension<InspectionCategoryMutations>()
+    .AddTypeExtension<InspectionChecklistItemMutations>()
+    .AddTypeExtension<InventoryMovementMutations>()
+    .AddTypeExtension<VehicleRentalMutations>()
+    .AddTypeExtension<InvoiceMutations>()
+    .AddTypeExtension<WorkOrderMutations>()
+    .AddTypeExtension<WorkOrderItemMutations>()
+    .AddTypeExtension<InspectionMutations>()
+    .AddTypeExtension<WorkOrderPhotoMutations>()
+    .AddErrorFilter<DbErrorFilter>()
     .AddType<UploadType>()       // Soporte para IFile
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
     .AddProjections()            // Habilita [UseProjection]

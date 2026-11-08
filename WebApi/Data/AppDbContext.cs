@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Identity;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
 using WebApi.Models;
 using WebApi.Models.Empleados;
 
@@ -28,6 +31,20 @@ namespace WebApi.Data
         public DbSet<Model> Models { get; set; }
 
         public DbSet<Vehicle> Vehicles { get; set; }
+
+        public DbSet<InspectionCategory> InspectionCategories { get; set; }
+
+        public DbSet<InventoryMovement> InventoryMovements { get; set; }
+        public DbSet<VehicleRental> VehicleRentals { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<WorkOrder> WorkOrders { get; set; }
+        public DbSet<WorkOrderPart> WorkOrderParts { get; set; }
+        public DbSet<WorkOrderService> WorkOrderServices { get; set; }
+        public DbSet<WorkOrderPhoto> WorkOrderPhotos { get; set; }
+        public DbSet<VehicleInspection> VehicleInspections { get; set; }
+        public DbSet<VehicleInspectionResult> VehicleInspectionResults { get; set; }
+
+        public DbSet<InspectionChecklistItem> InspectionChecklistItems { get; set; }
 
         // --------------------------------------------
 
@@ -144,9 +161,13 @@ namespace WebApi.Data
 
             modelBuilder.Entity<InventoryPart>(entity =>
             {
-                entity.ToTable("inventory_parts");
+                // Las tablas con triggers no admiten el OUTPUT por defecto de EF.
+                entity.ToTable("inventory_parts", t => t.UseSqlOutputClause(false));
                 entity.HasKey(e => e.inventoryPartId);
                 entity.Property(e => e.isActive).HasDefaultValue(true);
+                // El stock lo mantiene el trigger de inventory_movements: EF nunca lo escribe.
+                entity.Property(e => e.stockQuantity).Metadata.SetBeforeSaveBehavior(PropertySaveBehavior.Ignore);
+                entity.Property(e => e.stockQuantity).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
             });
 
             modelBuilder.Entity<Brand>(entity =>
@@ -166,6 +187,123 @@ namespace WebApi.Data
                       .WithMany(b => b.Models)
                       .HasForeignKey(e => e.brandId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<InspectionCategory>(entity =>
+            {
+                entity.ToTable("inspection_categories");
+                entity.HasKey(e => e.categoryId);
+                entity.Property(e => e.name).IsRequired().HasMaxLength(100);
+            });
+
+            modelBuilder.Entity<InspectionChecklistItem>(entity =>
+            {
+                entity.ToTable("inspection_checklist_items");
+                entity.HasKey(e => e.itemId);
+                entity.Property(e => e.name).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.inputType).IsRequired();
+                // options: arreglo JSON de strings en la BD <-> List<string> en la API
+                entity.Property(e => e.options).HasConversion(
+                    v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                    v => v == null ? null : JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null),
+                    new ValueComparer<List<string>?>(
+                        (a, b) => a == null ? b == null : b != null && a.SequenceEqual(b),
+                        v => v == null ? 0 : v.Aggregate(0, (h, x) => HashCode.Combine(h, x.GetHashCode())),
+                        v => v == null ? null : v.ToList()));
+                entity.HasOne(e => e.Category)
+                      .WithMany()
+                      .HasForeignKey(e => e.categoryId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<InventoryMovement>(entity =>
+            {
+                entity.ToTable("inventory_movements", t => t.UseSqlOutputClause(false));
+                entity.HasKey(e => e.movementId);
+                entity.Property(e => e.movementType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.unitCost).HasPrecision(18, 4);
+                entity.Property(e => e.notes).HasMaxLength(500);
+                entity.HasOne(e => e.Part).WithMany().HasForeignKey(e => e.partId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.CreatedByUser).WithMany().HasForeignKey(e => e.createdBy).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<VehicleRental>(entity =>
+            {
+                entity.ToTable("vehicle_rentals");
+                entity.HasKey(e => e.id);
+                entity.Property(e => e.rateAmount).HasPrecision(10, 2);
+                entity.HasOne(e => e.Vehicle).WithMany().HasForeignKey(e => e.vehicleId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Company).WithMany().HasForeignKey(e => e.companyId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Invoice>(entity =>
+            {
+                entity.ToTable("invoices");
+                entity.HasKey(e => e.id);
+                entity.Property(e => e.subtotal).HasPrecision(12, 2);
+                entity.Property(e => e.taxRate).HasPrecision(8, 4);
+                entity.Property(e => e.taxAmount).HasPrecision(12, 2);
+                entity.Property(e => e.totalAmount).HasPrecision(12, 2);
+                entity.Property(e => e.exchangeRate).HasPrecision(18, 6);
+                entity.HasOne(e => e.Company).WithMany().HasForeignKey(e => e.companyId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<WorkOrder>(entity =>
+            {
+                entity.ToTable("work_orders", t => t.UseSqlOutputClause(false));
+                entity.HasKey(e => e.workOrderId);
+                entity.Property(e => e.totalInternalCost).HasPrecision(12, 2);
+                entity.Property(e => e.totalBilledPrice).HasPrecision(12, 2);
+                entity.HasOne(e => e.Vehicle).WithMany().HasForeignKey(e => e.vehicleId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Company).WithMany().HasForeignKey(e => e.companyId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Creator).WithMany().HasForeignKey(e => e.createdBy).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Rental).WithMany().HasForeignKey(e => e.rentalId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasOne(e => e.Invoice).WithMany().HasForeignKey(e => e.invoiceId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(e => e.Parts).WithOne().HasForeignKey(p => p.workOrderId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(e => e.Services).WithOne().HasForeignKey(p => p.workOrderId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(e => e.Photos).WithOne().HasForeignKey(p => p.workOrderId).OnDelete(DeleteBehavior.Restrict);
+                entity.HasMany(e => e.Inspections).WithOne().HasForeignKey(p => p.workOrderId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<WorkOrderPart>(entity =>
+            {
+                entity.ToTable("work_order_parts", t => t.UseSqlOutputClause(false));
+                entity.HasKey(e => e.workOrderPartId);
+                entity.Property(e => e.totalUnitCost).HasPrecision(12, 2);
+                entity.Property(e => e.unitPrice).HasPrecision(12, 2);
+                entity.HasOne(e => e.Part).WithMany().HasForeignKey(e => e.partId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<WorkOrderService>(entity =>
+            {
+                entity.ToTable("work_order_services", t => t.UseSqlOutputClause(false));
+                entity.HasKey(e => e.workOrderServiceId);
+                entity.Property(e => e.description).HasMaxLength(255);
+                entity.Property(e => e.internalCost).HasPrecision(12, 2);
+                entity.Property(e => e.price).HasPrecision(12, 2);
+                entity.HasOne(e => e.Mechanic).WithMany().HasForeignKey(e => e.mechanicId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<WorkOrderPhoto>(entity =>
+            {
+                entity.ToTable("work_order_photos");
+                entity.HasKey(e => e.workOrderPhotoId);
+                entity.Property(e => e.category).HasMaxLength(255);
+            });
+
+            modelBuilder.Entity<VehicleInspection>(entity =>
+            {
+                entity.ToTable("vehicle_inspections");
+                entity.HasKey(e => e.vehicleInspectionId);
+                entity.HasMany(e => e.Results).WithOne().HasForeignKey(r => r.vehicleInspectionId).OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<VehicleInspectionResult>(entity =>
+            {
+                entity.ToTable("vehicle_inspection_results");
+                entity.HasKey(e => e.resultId);
+                entity.Property(e => e.notes).HasMaxLength(500);
+                entity.HasOne(e => e.Item).WithMany().HasForeignKey(e => e.itemId).OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Vehicle>(entity =>

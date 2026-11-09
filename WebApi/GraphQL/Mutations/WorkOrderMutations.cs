@@ -44,7 +44,8 @@ namespace WebApi.GraphQL.Mutations
                 dropoffDriverName = dropoffDriverName,
                 pickupDriverName = pickupDriverName,
                 createdBy = WorkOrderSupport.CurrentUserId(user),
-                entryTimestamp = DateTime.Now
+                entryTimestamp = WorkOrderRules.Now(),
+                statusChangedAt = WorkOrderRules.Now()
             };
             context.WorkOrders.Add(order);
             await context.SaveChangesAsync(); // carrera con otra orden abierta => UX_WO_OneOpenPerVehicle => DbErrorFilter
@@ -91,7 +92,8 @@ namespace WebApi.GraphQL.Mutations
                 throw new GraphQLException($"Transición no permitida: {order.currentStatus} → {newStatus}.");
 
             order.currentStatus = newStatus;
-            if (newStatus == "Entregado") order.exitTimestamp = DateTime.Now;
+            order.statusChangedAt = WorkOrderRules.Now();
+            if (newStatus == "Entregado") order.exitTimestamp = WorkOrderRules.Now();
             await context.SaveChangesAsync();
             return await WorkOrderSupport.LoadFullAsync(context, workOrderId);
         }
@@ -111,6 +113,7 @@ namespace WebApi.GraphQL.Mutations
             var parts = await context.WorkOrderParts.Where(p => p.workOrderId == workOrderId).ToListAsync();
             context.WorkOrderParts.RemoveRange(parts);
             order.currentStatus = "Cancelado";
+            order.statusChangedAt = WorkOrderRules.Now();
             await context.SaveChangesAsync();
             await WorkOrderSupport.RecalculateTotalsAsync(context, order);
             await transaction.CommitAsync();

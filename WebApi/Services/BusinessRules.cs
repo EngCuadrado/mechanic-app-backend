@@ -9,6 +9,12 @@ public static class WorkOrderRules
     public static readonly string[] Types = { "Preventivo", "Correctivo", "Choque", "Entrega", "Devolucion" };
     public static readonly string[] Statuses = { "Recibido", "En proceso", "Listo", "Entregado", "Cancelado" };
 
+    // Regla de fechas: entry_timestamp/exit_timestamp se guardan en la hora local de esta zona (sin offset)
+    // y "hoy" se calcula en la misma zona. shortcut: filas anteriores a este cambio usaban la hora del servidor.
+    public const string TimeZoneId = "America/Managua";
+    public static DateTime Now() =>
+        TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId));
+
     private static readonly Dictionary<string, string[]> Transitions = new()
     {
         ["Recibido"] = new[] { "En proceso", "Cancelado" },
@@ -62,6 +68,11 @@ public static class InspectionRules
 {
     public static readonly string[] InputTypes =
         { "text", "textarea", "number", "checkbox", "date", "select", "radio" };
+
+    public static readonly string[] AppliesToValues = { "Entrada", "Salida", "Ambas" };
+
+    public static bool Applies(string appliesTo, string inspectionType) =>
+        appliesTo == "Ambas" || appliesTo == inspectionType;
 
     public static bool UsesOptions(string inputType) => inputType is "select" or "radio";
 

@@ -14,3 +14,7 @@ namespace WebApi.GraphQL.Payloads
     public record StockCheckRow(List<StockCheckCell> Cells);
     public record StockCheck(bool IsConsistent, List<StockCheckRow> Rows);
 }
+
+public record WorkOrderStatusCount(string Status, int Count);
+
+public record WorkOrderDashboard(int CreatedToday, int ReadyToDeliver, int Stalled);

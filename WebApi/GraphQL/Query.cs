@@ -13,6 +13,7 @@ namespace WebApi.GraphQL
     using Microsoft.EntityFrameworkCore;
     using WebApi.GraphQL.Mutations;
     using WebApi.GraphQL.Payloads;
+    using WebApi.Services;
 
     // Define QUÉ se puede pedir.
     public class Query
@@ -359,6 +360,40 @@ namespace WebApi.GraphQL
         public IQueryable<WorkOrder> GetWorkOrders([Service] AppDbContext context) =>
             context.WorkOrders.OrderByDescending(o => o.entryTimestamp).ThenByDescending(o => o.workOrderId);
 
+        // Una fila por estado (incluye los de 0), calculado con GROUP BY en la BD.
+        public async Task<List<WorkOrderStatusCount>> GetWorkOrderStatusCounts(
+            [Service] AppDbContext context, DateTime? entryFrom, DateTime? entryTo, int? vehicleId)
+        {
+            var q = context.WorkOrders.AsNoTracking().AsQueryable();
+            if (entryFrom.HasValue) q = q.Where(o => o.entryTimestamp >= entryFrom.Value);
+            if (entryTo.HasValue) q = q.Where(o => o.entryTimestamp <= entryTo.Value);
+            if (vehicleId.HasValue) q = q.Where(o => o.vehicleId == vehicleId.Value);
+
+            var counts = await q.GroupBy(o => o.currentStatus)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Status, x => x.Count);
+            return WorkOrderRules.Statuses
+                .Select(s => new WorkOrderStatusCount(s, counts.GetValueOrDefault(s))).ToList();
+        }
+
+        // Cifras del dashboard. "Hoy" = día calendario en WorkOrderRules.TimeZoneId.
+        // stalled: Recibido/En proceso con más de stalledHours desde statusChangedAt (entryTimestamp si es null).
+        public async Task<WorkOrderDashboard> GetWorkOrderDashboard(
+            [Service] AppDbContext context, int stalledHours = 24)
+        {
+            if (stalledHours <= 0) throw new GraphQLException("stalledHours debe ser mayor que 0.");
+            var now = WorkOrderRules.Now();
+            var today = now.Date;
+            var tomorrow = today.AddDays(1);
+            var limit = now.AddHours(-stalledHours);
+            var orders = context.WorkOrders.AsNoTracking();
+            return new WorkOrderDashboard(
+                await orders.CountAsync(o => o.entryTimestamp >= today && o.entryTimestamp < tomorrow),
+                await orders.CountAsync(o => o.currentStatus == "Listo"),
+                await orders.CountAsync(o => (o.currentStatus == "Recibido" || o.currentStatus == "En proceso")
+                                             && (o.statusChangedAt ?? o.entryTimestamp) < limit));
+        }
+
         [UseFirstOrDefault]
         [UseProjection]
         public IQueryable<WorkOrder> GetWorkOrder([Service] AppDbContext context, int workOrderId) =>
@@ -371,8 +406,9 @@ namespace WebApi.GraphQL
             context.VehicleInspections.Where(i => i.vehicleInspectionId == vehicleInspectionId);
 
         // Checklist agrupado por categoría (sort_order) con los valores guardados; sin id devuelve el formulario vacío.
-        public Task<InspectionForm> GetInspectionForm([Service] AppDbContext context, int? vehicleInspectionId) =>
-            WorkOrderSupport.BuildFormAsync(context, vehicleInspectionId);
+        public Task<InspectionForm> GetInspectionForm(
+            [Service] AppDbContext context, int? vehicleInspectionId, string? inspectionType) =>
+            WorkOrderSupport.BuildFormAsync(context, vehicleInspectionId, inspectionType);
 
         // ---- Fotos ----
         public async Task<List<PhotoStageGroup>> GetWorkOrderPhotos(

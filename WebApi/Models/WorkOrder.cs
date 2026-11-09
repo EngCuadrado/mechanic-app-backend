@@ -7,6 +7,7 @@ public class WorkOrder
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [HotChocolate.Data.IsProjected(true)]
     [Column("work_order_id")]
     public int workOrderId { get; set; }
 
@@ -57,6 +58,10 @@ public class WorkOrder
 
     [Column("exit_timestamp")]
     public DateTime? exitTimestamp { get; set; }
+
+    // Último cambio de estado (también se fija al crear la orden); null en filas anteriores a la columna.
+    [Column("status_changed_at")]
+    public DateTime? statusChangedAt { get; set; }
 
     [Column("total_internal_cost")]
     public decimal? totalInternalCost { get; set; }

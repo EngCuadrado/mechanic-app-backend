@@ -53,7 +53,7 @@ namespace WebApi.GraphQL.Mutations
                 .Include(o => o.Inspections)
                 .FirstAsync(o => o.workOrderId == workOrderId);
 
-        public static async Task<InspectionForm> BuildFormAsync(AppDbContext context, int? inspectionId)
+        public static async Task<InspectionForm> BuildFormAsync(AppDbContext context, int? inspectionId, string? inspectionType = null)
         {
             VehicleInspection? inspection = null;
             if (inspectionId.HasValue)
@@ -61,9 +61,14 @@ namespace WebApi.GraphQL.Mutations
                     .FirstOrDefaultAsync(i => i.vehicleInspectionId == inspectionId.Value)
                     ?? throw new GraphQLException("La inspección no existe.");
 
+            // Con inspección, manda su tipo; sin ella, el tipo pedido; sin ninguno, todos los ítems.
+            var type = inspection?.inspectionType ?? inspectionType;
+            if (type != null) WorkOrderRules.RequireValid(type, new[] { "Entrada", "Salida" }, "Tipo de inspección");
+
             var results = inspection?.Results.ToDictionary(r => r.itemId) ?? new();
             var items = await context.InspectionChecklistItems.AsNoTracking().Include(i => i.Category)
-                .Where(i => i.isActive || results.Keys.Contains(i.itemId)).ToListAsync();
+                .Where(i => (i.isActive && (type == null || i.appliesTo == "Ambas" || i.appliesTo == type))
+                            || results.Keys.Contains(i.itemId)).ToListAsync();
 
             var groups = items
                 .GroupBy(i => i.categoryId) // por id: con AsNoTracking cada ítem trae su propia instancia de Category

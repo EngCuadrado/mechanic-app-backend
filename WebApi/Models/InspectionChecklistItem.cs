@@ -24,6 +24,10 @@ public class InspectionChecklistItem
     [Column("category_id")]
     public int? categoryId { get; set; }
 
+    // Entrada, Salida o Ambas
+    [Column("applies_to")]
+    public string appliesTo { get; set; } = "Ambas";
+
     [Column("is_required")]
     public bool isRequired { get; set; } = true;
 

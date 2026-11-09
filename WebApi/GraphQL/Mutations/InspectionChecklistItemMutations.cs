@@ -24,8 +24,10 @@ namespace WebApi.GraphQL.Mutations
             string inputType,
             List<string>? options,
             int? categoryId,
-            bool isRequired = true)
+            bool isRequired = true,
+            string appliesTo = "Ambas")
         {
+            WorkOrderRules.RequireValid(appliesTo, InspectionRules.AppliesToValues, "appliesTo");
             name = name?.Trim() ?? "";
             if (name.Length == 0) throw new GraphQLException("El nombre del ítem es obligatorio.");
             inputType = inputType?.Trim() ?? "";
@@ -39,6 +41,7 @@ namespace WebApi.GraphQL.Mutations
                 options = cleanOptions,
                 categoryId = categoryId,
                 isRequired = isRequired,
+                appliesTo = appliesTo,
                 isActive = true
             };
             context.InspectionChecklistItems.Add(item);
@@ -55,7 +58,8 @@ namespace WebApi.GraphQL.Mutations
             string? inputType,
             Optional<List<string>?> options,
             Optional<int?> categoryId,
-            bool? isRequired)
+            bool? isRequired,
+            string? appliesTo)
         {
             var item = await context.InspectionChecklistItems.FindAsync(itemId);
             if (item == null) throw new GraphQLException("El ítem no existe.");
@@ -80,6 +84,11 @@ namespace WebApi.GraphQL.Mutations
                 item.categoryId = categoryId.Value;
             }
             if (isRequired.HasValue) item.isRequired = isRequired.Value;
+            if (appliesTo != null)
+            {
+                WorkOrderRules.RequireValid(appliesTo, InspectionRules.AppliesToValues, "appliesTo");
+                item.appliesTo = appliesTo;
+            }
 
             await context.SaveChangesAsync();
 

@@ -101,6 +101,8 @@ builder.Services
     .AddTypeExtension<InventoryMovementMutations>()
     .AddTypeExtension<VehicleRentalMutations>()
     .AddTypeExtension<InvoiceMutations>()
+    .AddTypeExtension<WorkOrderFields>()
+    .AddDataLoader<AssignedMechanicsDataLoader>()
     .AddTypeExtension<WorkOrderMutations>()
     .AddTypeExtension<WorkOrderItemMutations>()
     .AddTypeExtension<InspectionMutations>()

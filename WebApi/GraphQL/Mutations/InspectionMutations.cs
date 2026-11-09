@@ -78,14 +78,24 @@ namespace WebApi.GraphQL.Mutations
                 .Where(i => ids.Contains(i.itemId)).ToDictionaryAsync(i => i.itemId);
 
             var errors = new List<string>();
+            var notApplicable = new List<string>();
             foreach (var r in results)
             {
                 if (!items.TryGetValue(r.ItemId, out var item)) { errors.Add($"Ítem {r.ItemId}: no existe."); continue; }
                 if (!item.isActive) { errors.Add($"\"{item.name}\": el ítem está inactivo."); continue; }
+                if (!InspectionRules.Applies(item.appliesTo, inspection.inspectionType))
+                {
+                    notApplicable.Add($"\"{item.name}\" (ítem {item.itemId}) aplica a {item.appliesTo}");
+                    continue;
+                }
                 var error = InspectionRules.ValidateValue(item.inputType, item.options, r.Value);
                 if (error != null) errors.Add($"\"{item.name}\": {error}.");
                 if (r.Notes?.Length > 500) errors.Add($"\"{item.name}\": las notas superan 500 caracteres.");
             }
+            if (notApplicable.Count > 0)
+                throw new GraphQLException(ErrorBuilder.New()
+                    .SetMessage($"No aplican a una inspección de {inspection.inspectionType}: {string.Join("; ", notApplicable)}.")
+                    .SetCode("ITEM_NOT_APPLICABLE").Build());
             if (errors.Count > 0) throw new GraphQLException(string.Join(" ", errors));
 
             using var transaction = await context.Database.BeginTransactionAsync();
@@ -103,7 +113,8 @@ namespace WebApi.GraphQL.Mutations
             {
                 var filled = inspection.Results.Where(x => !string.IsNullOrWhiteSpace(x.value)).Select(x => x.itemId).ToHashSet();
                 var missing = await context.InspectionChecklistItems.AsNoTracking()
-                    .Where(i => i.isActive && i.isRequired && !filled.Contains(i.itemId))
+                    .Where(i => i.isActive && i.isRequired && (i.appliesTo == "Ambas" || i.appliesTo == inspection.inspectionType)
+                                && !filled.Contains(i.itemId))
                     .Select(i => i.name).ToListAsync();
                 if (missing.Count > 0)
                     throw new GraphQLException($"Faltan ítems obligatorios: {string.Join(", ", missing)}."); // la transacción se revierte

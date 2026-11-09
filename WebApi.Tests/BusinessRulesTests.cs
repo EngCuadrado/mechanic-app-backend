@@ -94,4 +94,13 @@ public class InspectionRulesTests
         Assert.Null(InspectionRules.ValidateValue("select", opts, "Limpio"));
         Assert.NotNull(InspectionRules.ValidateValue("radio", opts, "Otro"));
     }
+
+    [Theory]
+    [InlineData("Ambas", "Entrada", true)]
+    [InlineData("Ambas", "Salida", true)]
+    [InlineData("Entrada", "Entrada", true)]
+    [InlineData("Entrada", "Salida", false)]
+    [InlineData("Salida", "Entrada", false)]
+    public void AppliesTo_FiltersByInspectionType(string appliesTo, string type, bool expected) =>
+        Assert.Equal(expected, InspectionRules.Applies(appliesTo, type));
 }

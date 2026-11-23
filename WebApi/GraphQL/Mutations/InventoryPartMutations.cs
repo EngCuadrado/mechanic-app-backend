@@ -66,7 +66,7 @@ namespace WebApi.GraphQL.Mutations
                     movementType = "Inicial",
                     notes = "Stock inicial",
                     createdBy = WorkOrderSupport.CurrentUserId(user),
-                    createdAt = DateTime.Now
+                    createdAt = DateTime.UtcNow
                 });
                 await context.SaveChangesAsync();
             }

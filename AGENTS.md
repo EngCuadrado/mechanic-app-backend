@@ -43,8 +43,8 @@ Azure Blob Storage (fotos) · xUnit (`WebApi.Tests`).
   movimientos son inmutables. Nada escribe `stock_quantity` directo.
 - Los totales de la orden se calculan aquí (`WorkOrderRules.Totals`) en la misma transacción que el cambio.
 - Fotos de una orden `Entregado` son evidencia: no se editan ni borran.
-- Fechas: zona del taller `WorkOrderRules.TimeZoneId` (`America/Managua`). Si se cambia cómo se emiten las fechas, avisa: el frontend
-  las interpreta en un solo lugar (`shared/utils/dates.ts`).
+- Fechas: **todo en UTC** (`WorkOrderRules.Now()` = `DateTime.UtcNow`; nunca `DateTime.Now`, que depende del servidor). La zona del
+  taller (`WorkOrderRules.TimeZoneId`, `America/Managua`) solo se usa para "hoy" (`TodayStartUtc`). El frontend convierte para mostrar.
 
 ## 6. Contrato con el frontend
 El contrato está en `../mechanic-app-frontend-/docs/work-orders-api.md` (y `work-orders-database.md`). Si agregas, cambias o pruebas una

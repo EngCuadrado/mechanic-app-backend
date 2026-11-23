@@ -36,7 +36,7 @@ namespace WebApi.GraphQL.Mutations
                 companyId = companyId, invoiceNumber = invoiceNumber, status = status,
                 issueDate = issueDate, dueDate = dueDate, subtotal = subtotal, taxRate = taxRate,
                 taxAmount = taxAmount, totalAmount = totalAmount, currency = currency,
-                exchangeRate = exchangeRate, notes = notes, createdAt = DateTime.Now
+                exchangeRate = exchangeRate, notes = notes, createdAt = DateTime.UtcNow
             };
             context.Invoices.Add(invoice);
             await context.SaveChangesAsync();

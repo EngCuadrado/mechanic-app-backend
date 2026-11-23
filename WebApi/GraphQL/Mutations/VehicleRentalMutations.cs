@@ -35,7 +35,7 @@ namespace WebApi.GraphQL.Mutations
                 vehicleId = vehicleId, companyId = companyId, startDate = startDate,
                 expectedEndDate = expectedEndDate, billingPeriod = billingPeriod,
                 rateAmount = rateAmount, status = status, contractUrl = contractUrl,
-                createdAt = DateTime.Now
+                createdAt = DateTime.UtcNow
             };
             context.VehicleRentals.Add(rental);
             await context.SaveChangesAsync();

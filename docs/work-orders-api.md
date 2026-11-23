@@ -3,7 +3,8 @@
 Probado = ejecutado contra la BD real (solo lecturas). No probado = compila pero no se ejecutó.
 
 ## Reglas de fechas
-- `entryTimestamp` / `exitTimestamp` se escriben en hora local de `America/Panama` (UTC-5, sin offset) con `WorkOrderRules.Now()`.
+- `entryTimestamp` / `exitTimestamp` / `statusChangedAt` se escriben en UTC con `WorkOrderRules.Now()` (2026-11-22; antes, hora de
+  Managua: ver `sql-utc-dates.sql`). "Hoy" se calcula en `America/Managua` con `WorkOrderRules.TodayStartUtc`.
 - "Hoy" (`createdToday`) = día calendario en esa misma zona. Zona única: `WorkOrderRules.TimeZoneId` (`Services/BusinessRules.cs`).
 - Las órdenes creadas antes de este cambio usaban `DateTime.Now` del servidor; si el servidor no estaba en esa zona, sus fechas pueden estar desfasadas.
 - Otras tablas (facturas, inspecciones, movimientos) siguen con `DateTime.Now` del servidor.

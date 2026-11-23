@@ -29,7 +29,7 @@ namespace WebApi.GraphQL.Mutations
             {
                 partId = partId, quantity = quantity, movementType = movementType,
                 unitCost = unitCost, notes = notes,
-                createdBy = WorkOrderSupport.CurrentUserId(user), createdAt = DateTime.Now
+                createdBy = WorkOrderSupport.CurrentUserId(user), createdAt = DateTime.UtcNow
             };
             context.InventoryMovements.Add(movement);
             await context.SaveChangesAsync(); // stock negativo => CK_inventory_parts_stock => "Stock insuficiente"

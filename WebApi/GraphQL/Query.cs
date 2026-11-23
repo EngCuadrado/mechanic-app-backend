@@ -382,8 +382,8 @@ namespace WebApi.GraphQL
             [Service] AppDbContext context, int stalledHours = 24)
         {
             if (stalledHours <= 0) throw new GraphQLException("stalledHours debe ser mayor que 0.");
-            var now = WorkOrderRules.Now();
-            var today = now.Date;
+            var now = WorkOrderRules.Now(); // UTC, como lo guardado
+            var today = WorkOrderRules.TodayStartUtc(now);
             var tomorrow = today.AddDays(1);
             var limit = now.AddHours(-stalledHours);
             var orders = context.WorkOrders.AsNoTracking();

@@ -75,6 +75,17 @@ public class WorkOrderRulesTests
     [InlineData(null, WebApi.Models.VehicleStatuses.DISPONIBLE)]
     public void Vehicle_leaves_shop_to_company_or_free(int? companyId, WebApi.Models.VehicleStatuses expected) =>
         Assert.Equal(expected, WorkOrderRules.StatusAfterShop(companyId));
+
+    [Theory]
+    // 02:20 UTC del 23 = 20:20 del 22 en Managua (UTC-6): "hoy" empezó el 22 a las 06:00 UTC.
+    [InlineData("2026-11-23T02:20:00", "2026-11-22T06:00:00")]
+    // 07:00 UTC del 23 = 01:00 del 23 en Managua: "hoy" empezó el 23 a las 06:00 UTC.
+    [InlineData("2026-11-23T07:00:00", "2026-11-23T06:00:00")]
+    public void Today_starts_at_shop_midnight_in_utc(string utcNow, string expected) =>
+        Assert.Equal(DateTime.Parse(expected), WorkOrderRules.TodayStartUtc(DateTime.Parse(utcNow)));
+
+    [Fact]
+    public void Now_is_utc() => Assert.Equal(DateTimeKind.Utc, WorkOrderRules.Now().Kind);
 }
 
 public class MovementRulesTests

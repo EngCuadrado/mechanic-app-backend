@@ -32,7 +32,7 @@ namespace WebApi.GraphQL.Mutations
             var inspection = new VehicleInspection
             {
                 workOrderId = workOrderId, inspectionType = inspectionType, mileage = mileage,
-                inspectionNotes = inspectionNotes, damageMapUrl = damageMapUrl, createdAt = DateTime.Now
+                inspectionNotes = inspectionNotes, damageMapUrl = damageMapUrl, createdAt = DateTime.UtcNow
             };
             context.VehicleInspections.Add(inspection);
             await RaiseVehicleMileageAsync(context, order.vehicleId, mileage);

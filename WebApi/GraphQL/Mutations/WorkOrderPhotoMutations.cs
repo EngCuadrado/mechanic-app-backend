@@ -43,7 +43,7 @@ namespace WebApi.GraphQL.Mutations
             var photo = new WorkOrderPhoto
             {
                 workOrderId = workOrderId, vehicleInspectionId = vehicleInspectionId,
-                stage = stage, photoUrl = url!, category = category, uploadedAt = DateTime.Now
+                stage = stage, photoUrl = url!, category = category, uploadedAt = DateTime.UtcNow
             };
             context.WorkOrderPhotos.Add(photo);
             await context.SaveChangesAsync();

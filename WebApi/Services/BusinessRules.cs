@@ -12,11 +12,18 @@ public static class WorkOrderRules
     public static readonly string[] Types = { "Preventivo", "Correctivo", "Choque", "Entrega", "Devolucion" };
     public static readonly string[] Statuses = { "Recibido", "En proceso", "Listo", "Entregado", "Cancelado" };
 
-    // Regla de fechas: entry_timestamp/exit_timestamp se guardan en la hora local de esta zona (sin offset)
-    // y "hoy" se calcula en la misma zona. shortcut: filas anteriores a este cambio usaban la hora del servidor.
+    // Regla de fechas: todo se guarda en UTC (igual que GETDATE() de la base, que corre en UTC) y la API lo devuelve con "Z".
+    // La zona del taller solo decide qué es "hoy" (TodayStartUtc) y cómo se muestran las horas en el frontend.
     public const string TimeZoneId = "America/Managua";
-    public static DateTime Now() =>
-        TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId));
+    public static DateTime Now() => DateTime.UtcNow;
+
+    // Inicio del día calendario del taller que contiene `utcNow`, expresado en UTC.
+    public static DateTime TodayStartUtc(DateTime utcNow)
+    {
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId);
+        var localMidnight = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utcNow, DateTimeKind.Utc), zone).Date;
+        return TimeZoneInfo.ConvertTimeToUtc(localMidnight, zone);
+    }
 
     private static readonly Dictionary<string, string[]> Transitions = new()
     {

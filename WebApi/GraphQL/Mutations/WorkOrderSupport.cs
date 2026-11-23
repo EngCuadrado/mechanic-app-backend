@@ -18,6 +18,28 @@ namespace WebApi.GraphQL.Mutations
         public static async Task<WorkOrder> GetOrderAsync(AppDbContext context, int workOrderId) =>
             await context.WorkOrders.FindAsync(workOrderId) ?? throw new GraphQLException("La orden no existe.");
 
+        // Error controlado con extensions.code, para que el frontend lo traduzca.
+        public static GraphQLException Error(string code, string message) =>
+            new(ErrorBuilder.New().SetMessage(message).SetCode(code).Build());
+
+        public static async Task<OrderFacts> LoadFactsAsync(AppDbContext context, WorkOrder order)
+        {
+            var id = order.workOrderId;
+            var types = await context.VehicleInspections.AsNoTracking()
+                .Where(i => i.workOrderId == id).Select(i => i.inspectionType).ToListAsync();
+            var hasWork = await context.WorkOrderParts.AnyAsync(p => p.workOrderId == id)
+                          || await context.WorkOrderServices.AnyAsync(s => s.workOrderId == id);
+            return new OrderFacts(types.Contains("Entrada"), !string.IsNullOrEmpty(order.dropoffSignatureUrl), hasWork,
+                types.Contains("Salida"), !string.IsNullOrEmpty(order.pickupSignatureUrl));
+        }
+
+        // El carro sale del taller: vuelve a ALQUILADO (tiene empresa) o DISPONIBLE. Se guarda con el SaveChanges de quien llama.
+        public static async Task ReleaseVehicleAsync(AppDbContext context, int vehicleId)
+        {
+            var vehicle = await context.Vehicles.FindAsync(vehicleId);
+            if (vehicle != null) vehicle.status = WorkOrderRules.StatusAfterShop(vehicle.companyId);
+        }
+
         public static void EnsureNotClosed(WorkOrder order)
         {
             if (WorkOrderRules.IsClosed(order.currentStatus))

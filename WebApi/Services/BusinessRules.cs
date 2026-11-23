@@ -1,7 +1,10 @@
 using System.Globalization;
 using HotChocolate;
+using WebApi.Models;
 
 namespace WebApi.Services;
+
+public readonly record struct OrderFacts(bool EntryInspection, bool DropoffSigned, bool HasWork, bool ExitInspection, bool PickupSigned);
 
 // Reglas de negocio puras (sin BD) para poder probarlas aisladas.
 public static class WorkOrderRules
@@ -23,6 +26,22 @@ public static class WorkOrderRules
     };
 
     public static bool IsClosed(string status) => status is "Entregado" or "Cancelado";
+
+    // Lo que debe existir para avanzar: recepción completa para empezar, trabajo para Listo, salida completa para entregar.
+    public static (string Code, string Message)? TransitionBlocker(string to, OrderFacts f) => to switch
+    {
+        "En proceso" when !f.EntryInspection || !f.DropoffSigned =>
+            ("RECEPTION_INCOMPLETE", "Completa la recepción (inspección de entrada y firma) antes de empezar el trabajo."),
+        "Listo" when !f.HasWork =>
+            ("NO_WORK", "Agrega al menos un servicio o repuesto antes de marcar la orden como Lista."),
+        "Entregado" when !f.ExitInspection || !f.PickupSigned =>
+            ("DELIVERY_INCOMPLETE", "Completa la entrega (inspección de salida y firma de quien recoge) antes de entregar."),
+        _ => null
+    };
+
+    // Al salir del taller (entregada o cancelada) el carro vuelve a su empresa o queda libre.
+    public static VehicleStatuses StatusAfterShop(int? companyId) =>
+        companyId.HasValue ? VehicleStatuses.ALQUILADO : VehicleStatuses.DISPONIBLE;
 
     public static bool CanTransition(string from, string to) =>
         Transitions.TryGetValue(from, out var next) && next.Contains(to);

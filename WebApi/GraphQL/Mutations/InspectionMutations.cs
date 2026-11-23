@@ -35,6 +35,9 @@ namespace WebApi.GraphQL.Mutations
                 inspectionNotes = inspectionNotes, damageMapUrl = damageMapUrl, createdAt = DateTime.Now
             };
             context.VehicleInspections.Add(inspection);
+            // El km de la inspección es la lectura más reciente del carro; nunca se baja.
+            var vehicle = await context.Vehicles.FindAsync(order.vehicleId);
+            if (vehicle != null && mileage > (vehicle.currentMilage ?? 0)) vehicle.currentMilage = mileage;
             await context.SaveChangesAsync(); // carrera => UQ_Inspections_WO_Type => DbErrorFilter
             return inspection;
         }

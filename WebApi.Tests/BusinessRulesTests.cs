@@ -36,6 +36,45 @@ public class WorkOrderRulesTests
 
     [Fact]
     public void Totals_empty_is_zero() => Assert.Equal((0m, 0m), WorkOrderRules.Totals(new (int, decimal, decimal)[0], new (decimal, decimal)[0]));
+
+    private static readonly OrderFacts Complete = new(true, true, true, true, true);
+
+    [Theory]
+    [InlineData("En proceso", "RECEPTION_INCOMPLETE")]
+    [InlineData("Listo", "NO_WORK")]
+    [InlineData("Entregado", "DELIVERY_INCOMPLETE")]
+    public void Nothing_done_blocks_each_step(string to, string code) =>
+        Assert.Equal(code, WorkOrderRules.TransitionBlocker(to, new OrderFacts())?.Code);
+
+    [Theory]
+    [InlineData("En proceso")]
+    [InlineData("Listo")]
+    [InlineData("Entregado")]
+    [InlineData("Cancelado")]
+    public void Complete_order_is_never_blocked(string to) => Assert.Null(WorkOrderRules.TransitionBlocker(to, Complete));
+
+    [Fact]
+    public void Cancel_is_never_blocked() => Assert.Null(WorkOrderRules.TransitionBlocker("Cancelado", new OrderFacts()));
+
+    [Fact]
+    public void Reception_needs_inspection_and_signature()
+    {
+        Assert.NotNull(WorkOrderRules.TransitionBlocker("En proceso", Complete with { DropoffSigned = false }));
+        Assert.NotNull(WorkOrderRules.TransitionBlocker("En proceso", Complete with { EntryInspection = false }));
+    }
+
+    [Fact]
+    public void Delivery_needs_inspection_and_signature()
+    {
+        Assert.NotNull(WorkOrderRules.TransitionBlocker("Entregado", Complete with { PickupSigned = false }));
+        Assert.NotNull(WorkOrderRules.TransitionBlocker("Entregado", Complete with { ExitInspection = false }));
+    }
+
+    [Theory]
+    [InlineData(3, WebApi.Models.VehicleStatuses.ALQUILADO)]
+    [InlineData(null, WebApi.Models.VehicleStatuses.DISPONIBLE)]
+    public void Vehicle_leaves_shop_to_company_or_free(int? companyId, WebApi.Models.VehicleStatuses expected) =>
+        Assert.Equal(expected, WorkOrderRules.StatusAfterShop(companyId));
 }
 
 public class MovementRulesTests

@@ -25,7 +25,7 @@ namespace WebApi.GraphQL.Mutations
             int? rentalId)
         {
             WorkOrderRules.RequireValid(type, WorkOrderRules.Types, "Tipo de orden");
-            var vehicle = await context.Vehicles.AsNoTracking().FirstOrDefaultAsync(v => v.vehicleId == vehicleId)
+            var vehicle = await context.Vehicles.FirstOrDefaultAsync(v => v.vehicleId == vehicleId)
                           ?? throw new GraphQLException("El vehículo no existe.");
             if (await context.WorkOrders.AnyAsync(o => o.vehicleId == vehicleId && OpenStatuses.Contains(o.currentStatus)))
                 throw new GraphQLException("El vehículo ya tiene una orden abierta.");
@@ -48,6 +48,7 @@ namespace WebApi.GraphQL.Mutations
                 statusChangedAt = WorkOrderRules.Now()
             };
             context.WorkOrders.Add(order);
+            vehicle.status = VehicleStatuses.MANTENIMIENTO; // mismo SaveChanges: orden y estado del carro juntos
             await context.SaveChangesAsync(); // carrera con otra orden abierta => UX_WO_OneOpenPerVehicle => DbErrorFilter
 
             return await WorkOrderSupport.LoadFullAsync(context, order.workOrderId);
@@ -90,10 +91,16 @@ namespace WebApi.GraphQL.Mutations
             var order = await WorkOrderSupport.GetOrderAsync(context, workOrderId);
             if (!WorkOrderRules.CanTransition(order.currentStatus, newStatus))
                 throw new GraphQLException($"Transición no permitida: {order.currentStatus} → {newStatus}.");
+            if (WorkOrderRules.TransitionBlocker(newStatus, await WorkOrderSupport.LoadFactsAsync(context, order)) is { } block)
+                throw WorkOrderSupport.Error(block.Code, block.Message);
 
             order.currentStatus = newStatus;
             order.statusChangedAt = WorkOrderRules.Now();
-            if (newStatus == "Entregado") order.exitTimestamp = WorkOrderRules.Now();
+            if (newStatus == "Entregado")
+            {
+                order.exitTimestamp = WorkOrderRules.Now();
+                await WorkOrderSupport.ReleaseVehicleAsync(context, order.vehicleId);
+            }
             await context.SaveChangesAsync();
             return await WorkOrderSupport.LoadFullAsync(context, workOrderId);
         }
@@ -114,6 +121,7 @@ namespace WebApi.GraphQL.Mutations
             context.WorkOrderParts.RemoveRange(parts);
             order.currentStatus = "Cancelado";
             order.statusChangedAt = WorkOrderRules.Now();
+            await WorkOrderSupport.ReleaseVehicleAsync(context, order.vehicleId);
             await context.SaveChangesAsync();
             await WorkOrderSupport.RecalculateTotalsAsync(context, order);
             await transaction.CommitAsync();

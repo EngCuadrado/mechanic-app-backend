@@ -35,11 +35,16 @@ namespace WebApi.GraphQL.Mutations
                 inspectionNotes = inspectionNotes, damageMapUrl = damageMapUrl, createdAt = DateTime.Now
             };
             context.VehicleInspections.Add(inspection);
-            // El km de la inspección es la lectura más reciente del carro; nunca se baja.
-            var vehicle = await context.Vehicles.FindAsync(order.vehicleId);
-            if (vehicle != null && mileage > (vehicle.currentMilage ?? 0)) vehicle.currentMilage = mileage;
+            await RaiseVehicleMileageAsync(context, order.vehicleId, mileage);
             await context.SaveChangesAsync(); // carrera => UQ_Inspections_WO_Type => DbErrorFilter
             return inspection;
+        }
+
+        // El km de una inspección es la lectura más reciente del carro; nunca se baja.
+        private static async Task RaiseVehicleMileageAsync(AppDbContext context, int vehicleId, int? mileage)
+        {
+            var vehicle = await context.Vehicles.FindAsync(vehicleId);
+            if (vehicle != null && mileage > (vehicle.currentMilage ?? 0)) vehicle.currentMilage = mileage;
         }
 
         public async Task<VehicleInspection> EditarInspeccionAsync(
@@ -51,10 +56,15 @@ namespace WebApi.GraphQL.Mutations
         {
             var inspection = await context.VehicleInspections.FindAsync(vehicleInspectionId)
                              ?? throw new GraphQLException("La inspección no existe.");
-            WorkOrderSupport.EnsureNotClosed(await WorkOrderSupport.GetOrderAsync(context, inspection.workOrderId));
+            var order = await WorkOrderSupport.GetOrderAsync(context, inspection.workOrderId);
+            WorkOrderSupport.EnsureNotClosed(order);
             if (mileage.HasValue && mileage.Value < 0) throw new GraphQLException("El kilometraje no puede ser negativo.");
 
-            if (mileage.HasValue) inspection.mileage = mileage.Value;
+            if (mileage.HasValue)
+            {
+                inspection.mileage = mileage.Value;
+                await RaiseVehicleMileageAsync(context, order.vehicleId, mileage.Value);
+            }
             if (inspectionNotes.HasValue) inspection.inspectionNotes = inspectionNotes.Value;
             if (damageMapUrl.HasValue) inspection.damageMapUrl = damageMapUrl.Value;
             await context.SaveChangesAsync();
